@@ -15,6 +15,7 @@ const (
 	// identifiers and literals
 	IDENTIFIER
 	INT
+  FLOAT
 
 	// operators
 	ASSIGN
@@ -51,9 +52,24 @@ func ReadableTokenName(t Token) string {
     FUNCTION: "FUNCTION",
     LET: "LET",
     INT: "INT",
+    FLOAT: "FLOAT",
     RBRACKET: "RBRACKET",
     LBRACKET: "LBRACKET",
   }
 
   return tokenMap[t.Type]
+}
+
+
+func LookupIdentifier(literal []rune) TokenType {
+  tokenMap := map[string]TokenType {
+    "let": LET,
+    "fn": FUNCTION,
+  }
+
+  if token, ok := tokenMap[string(literal)]; ok {
+    return token
+  }
+
+  return IDENTIFIER
 }

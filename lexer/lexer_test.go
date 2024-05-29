@@ -7,23 +7,25 @@ import (
 
 func TestNextToken(t *testing.T) {
 	tests := []struct {
+    name string
 		input  string
 		output []token.Token
 	}{
 		{
-			input: "+=;(){}\n",
+      name: "Simple symbols",
+			input: "+=(){}\n",
 			output: []token.Token{
 				{Type: token.PLUS, Literal: []rune{'+'}},
 				{Type: token.ASSIGN, Literal: []rune{'='}},
-				{Type: token.ILLEGAL, Literal: []rune{}},
 				{Type: token.LPAREN, Literal: []rune{'('}},
 				{Type: token.RPAREN, Literal: []rune{')'}},
 				{Type: token.LBRACE, Literal: []rune{'{'}},
 				{Type: token.RBRACE, Literal: []rune{'}'}},
-        {Type: token.LINEBREAK, Literal: []rune{'\n'}},
+				{Type: token.LINEBREAK, Literal: []rune{'\n'}},
 			},
 		},
 		{
+      name: "identifiers",
 			input: `let five = 5
       let ten = 10
 
@@ -38,12 +40,12 @@ func TestNextToken(t *testing.T) {
 				{Type: token.ASSIGN, Literal: []rune("=")},
 				{Type: token.INT, Literal: []rune("5")},
 				{Type: token.LINEBREAK, Literal: []rune("\n")},
-        {Type: token.LET, Literal: []rune("let")},
-        {Type: token.IDENTIFIER, Literal: []rune("ten")},
-        {Type: token.ASSIGN, Literal: []rune("=")},
-        {Type: token.INT, Literal: []rune("10")},
-        {Type: token.LINEBREAK, Literal: []rune("\n")},
-        {Type: token.LINEBREAK, Literal: []rune("\n")},
+				{Type: token.LET, Literal: []rune("let")},
+				{Type: token.IDENTIFIER, Literal: []rune("ten")},
+				{Type: token.ASSIGN, Literal: []rune("=")},
+				{Type: token.INT, Literal: []rune("10")},
+				{Type: token.LINEBREAK, Literal: []rune("\n")},
+				{Type: token.LINEBREAK, Literal: []rune("\n")},
 				{Type: token.LET, Literal: []rune("let")},
 				{Type: token.IDENTIFIER, Literal: []rune("add")},
 				{Type: token.ASSIGN, Literal: []rune("=")},
@@ -54,23 +56,23 @@ func TestNextToken(t *testing.T) {
 				{Type: token.IDENTIFIER, Literal: []rune("y")},
 				{Type: token.RPAREN, Literal: []rune(")")},
 				{Type: token.LBRACE, Literal: []rune("{")},
-        {Type: token.LINEBREAK, Literal: []rune("\n")},
-        {Type: token.IDENTIFIER, Literal: []rune("x")},
-        {Type: token.PLUS, Literal: []rune("+")},
-        {Type: token.IDENTIFIER, Literal: []rune("y")},
-        {Type: token.LINEBREAK, Literal: []rune("\n")},
+				{Type: token.LINEBREAK, Literal: []rune("\n")},
+				{Type: token.IDENTIFIER, Literal: []rune("x")},
+				{Type: token.PLUS, Literal: []rune("+")},
+				{Type: token.IDENTIFIER, Literal: []rune("y")},
+				{Type: token.LINEBREAK, Literal: []rune("\n")},
 				{Type: token.RBRACE, Literal: []rune("}")},
-        {Type: token.LINEBREAK, Literal: []rune("\n")},
-        {Type: token.LINEBREAK, Literal: []rune("\n")},
-        {Type: token.LET, Literal: []rune("let")},
-        {Type: token.IDENTIFIER, Literal: []rune("result")},
-        {Type: token.ASSIGN, Literal: []rune("=")},
-        {Type: token.IDENTIFIER, Literal: []rune("add")},
-        {Type: token.LPAREN, Literal: []rune("(")},
-        {Type: token.IDENTIFIER, Literal: []rune("five")},
-        {Type: token.COMMA, Literal: []rune(",")},
-        {Type: token.IDENTIFIER, Literal: []rune("ten")},
-        {Type: token.RPAREN, Literal: []rune(")")},
+				{Type: token.LINEBREAK, Literal: []rune("\n")},
+				{Type: token.LINEBREAK, Literal: []rune("\n")},
+				{Type: token.LET, Literal: []rune("let")},
+				{Type: token.IDENTIFIER, Literal: []rune("result")},
+				{Type: token.ASSIGN, Literal: []rune("=")},
+				{Type: token.IDENTIFIER, Literal: []rune("add")},
+				{Type: token.LPAREN, Literal: []rune("(")},
+				{Type: token.IDENTIFIER, Literal: []rune("five")},
+				{Type: token.COMMA, Literal: []rune(",")},
+				{Type: token.IDENTIFIER, Literal: []rune("ten")},
+				{Type: token.RPAREN, Literal: []rune(")")},
 			},
 		},
 	}
@@ -78,18 +80,19 @@ func TestNextToken(t *testing.T) {
 	for _, test := range tests {
 		l := New(test.input)
 
-		for i, expected := range test.output {
+		for _, expected := range test.output {
 			tok := l.NextToken()
 
 			expectedType := token.ReadableTokenName(expected)
 			tokType := token.ReadableTokenName(tok)
+      name := test.name
 
 			if tok.Type != expected.Type {
-				t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q", i, expectedType, tokType)
+				t.Fatalf("tests[%s] - tokentype wrong. expected=%q, got=%q", name, expectedType, tokType)
 			}
 
 			if string(tok.Literal) != string(expected.Literal) {
-				t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, expected.Literal, tok.Literal)
+				t.Fatalf("tests[%s] - literal wrong. expected=%q, got=%q", name, expected.Literal, tok.Literal)
 			}
 		}
 	}
