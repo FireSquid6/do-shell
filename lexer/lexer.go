@@ -37,6 +37,12 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
+func (l *Lexer) eatWhitespace() {
+  for l.ch == ' ' || l.ch == '\t' || l.ch == '\r' {
+    l.readChar()
+  }
+}
+
 func (l *Lexer) NextToken() token.Token {
 	var t token.Token
 
