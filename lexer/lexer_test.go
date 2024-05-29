@@ -1,8 +1,9 @@
-package lexer
+package lexer_test
 
 import (
-	"github.com/firesquid6/do-shell/token"
   "github.com/firesquid6/do-shell/testcases"
+  "github.com/firesquid6/do-shell/lexer"
+  "github.com/firesquid6/do-shell/token"
 	"testing"
 )
 
@@ -10,22 +11,24 @@ func TestNextToken(t *testing.T) {
   tests := testcases.GetTestcases()
 
 	for _, test := range tests {
-		l := New(test.Text)
+    tokens := lexer.Tokenize(test.Text)
 
-		for _, expected := range test.ExpectedTokens{
-			tok := l.NextToken()
+    if len(tokens) != len(test.ExpectedTokens) {
+      t.Fatalf("Expected %d tokens, got %d", len(test.ExpectedTokens), len(tokens))
+    }
 
-			expectedType := token.ReadableTokenName(expected)
-			tokType := token.ReadableTokenName(tok)
-			name := test.Filename
+    for i, tok:= range tokens {
+      tokenType := token.ReadableTokenName(tok)
+      expectedType := token.ReadableTokenName(test.ExpectedTokens[i])
 
-			if tok.Type != expected.Type {
-				t.Fatalf("tests[%s] - tokentype wrong. expected=%q, got=%q", name, expectedType, tokType)
-			}
+      if tok.Type != test.ExpectedTokens[i].Type {
+        t.Fatalf("Expected token type %d to be '%s', got '%s'", i, tokenType, expectedType)
+      }
 
-			if string(tok.Literal) != string(expected.Literal) {
-				t.Fatalf("tests[%s] - literal wrong. expected=%q, got=%q", name, expected.Literal, tok.Literal)
-			}
-		}
+      if string(tok.Literal) != string(test.ExpectedTokens[i].Literal) {
+        t.Fatalf("Expected token literal %d to be '%s', got '%s'", i, string(test.ExpectedTokens[i].Literal), string(tok.Literal))
+      }
+    }
+
 	}
 }

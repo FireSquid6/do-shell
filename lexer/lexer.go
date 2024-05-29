@@ -26,7 +26,6 @@ func Tokenize(text string) []token.Token {
 	l := New(text)
 	tokens := []token.Token{}
 
-	// I should find a better way of doing this
 	for {
 		t := l.NextToken()
 		tokens = append(tokens, t)
