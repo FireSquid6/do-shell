@@ -21,6 +21,26 @@ const (
   COMMAND
 )
 
+
+func Tokenize(text string) []token.Token {
+  l := New(text)
+  tokens := []token.Token{}
+
+  // I should find a better way of doing this
+  for {
+    t := l.NextToken()
+    tokens = append(tokens, t)
+
+    if t.Type == token.EOF {
+      break
+    }
+  }
+
+
+  return tokens
+
+}
+
 func New(input string) *Lexer {
 	l := &Lexer{input: []rune(input)}
 	l.readChar()
