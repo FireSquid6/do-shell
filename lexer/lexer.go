@@ -23,6 +23,7 @@ const (
 )
 
 func Tokenize(text string) []token.Token {
+  fmt.Println(text)
 	l := New(text)
 	tokens := []token.Token{}
 
@@ -43,7 +44,6 @@ func New(input string) *Lexer {
   fmt.Println(input)
 	l := &Lexer{input: []rune(input)}
 	l.readChar()
-  fmt.Println(l.ch)
 	return l
 }
 
