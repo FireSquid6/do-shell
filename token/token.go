@@ -22,12 +22,14 @@ const (
 
 	// delimiters
 	COMMA
-	LINEEND
+  LINEBREAK
 
 	LPAREN
 	RPAREN
 	LBRACE
 	RBRACE
+  LBRACKET
+  RBRACKET
 
 	// keywords
 	FUNCTION
@@ -35,36 +37,23 @@ const (
 )
 
 func ReadableTokenName(t Token) string {
-	switch t.Type {
-	case ILLEGAL:
-		return "ILLEGAL"
-	case EOF:
-		return "EOF"
-	case IDENTIFIER:
-		return "IDENTIFIER"
-	case INT:
-		return "INT"
-	case ASSIGN:
-		return "ASSIGN"
-	case PLUS:
-		return "PLUS"
-	case COMMA:
-		return "COMMA"
-	case LINEEND:
-		return "LINEEND"
-	case LPAREN:
-		return "LPAREN"
-	case RPAREN:
-		return "RPAREN"
-	case LBRACE:
-		return "LBRACE"
-	case RBRACE:
-		return "RBRACE"
-	case FUNCTION:
-		return "FUNCTION"
-	case LET:
-		return "LET"
-	default:
-		return "UNKNOWN"
-	}
+  tokenMap := map[TokenType]string{
+    ILLEGAL: "ILLEGAL",
+    EOF: "EOF",
+    IDENTIFIER: "IDENTIFIER",
+    ASSIGN: "ASSIGN",
+    LPAREN: "LPAREN",
+    RPAREN: "RPAREN",
+    LBRACE: "LBRACE",
+    RBRACE: "RBRACE",
+    COMMA: "COMMA",
+    LINEBREAK: "LINEBREAK",
+    FUNCTION: "FUNCTION",
+    LET: "LET",
+    INT: "INT",
+    RBRACKET: "RBRACKET",
+    LBRACKET: "LBRACKET",
+  }
+
+  return tokenMap[t.Type]
 }

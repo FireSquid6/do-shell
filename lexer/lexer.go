@@ -9,10 +9,21 @@ type Lexer struct {
 	position     int
 	readPosition int
 	ch           rune
+	state        LexerState
 }
+
+type LexerState int
+
+const (
+  SYMBOLS LexerState = iota
+  STRING
+  IDENTIFIER
+  COMMAND
+)
 
 func New(input string) *Lexer {
 	l := &Lexer{input: []rune(input)}
+	l.readChar()
 	return l
 }
 
@@ -32,9 +43,9 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case '=':
 		t = newToken(token.ASSIGN, l.ch)
-	case ';':
+	case '\n':
 		// todo: make \n work as a linened character
-		t = newToken(token.LINEEND, l.ch)
+		t = newToken(token.LINEBREAK, l.ch)
 	case '(':
 		t = newToken(token.LPAREN, l.ch)
 	case ')':
@@ -48,8 +59,11 @@ func (l *Lexer) NextToken() token.Token {
 	case 0:
 		t.Literal = []rune{0}
 		t.Type = token.EOF
-
+  default:
+    t.Literal = []rune{}
+    t.Type = token.ILLEGAL
 	}
+
 	l.readChar()
 	return t
 }
