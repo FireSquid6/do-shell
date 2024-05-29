@@ -51,7 +51,7 @@ func (l *Lexer) readChar() {
 		l.ch = 0
 	} else {
 		l.ch = l.input[l.readPosition]
-    fmt.Println("readChar: ", string(l.ch))
+    fmt.Println("readChar: ", l.ch, " ", string(l.ch))
 	}
 	l.position = l.readPosition
 	l.readPosition += 1
@@ -82,8 +82,8 @@ func (l *Lexer) NextToken() token.Token {
   // simple single character tokens
 	case '=':
 		t = newToken(token.ASSIGN, l.ch)
-	case '\n':
-    fmt.Println("linebreak")
+	case  10:
+    fmt.Println("Linebreak")
 		t = newToken(token.LINEBREAK, l.ch)
 	case '(':
 		t = newToken(token.LPAREN, l.ch)
@@ -115,6 +115,7 @@ func (l *Lexer) NextToken() token.Token {
 	}
 
 	l.readChar()
+  fmt.Println("NextToken: ", token.ReadableTokenName(t), " ", string(t.Literal))
 	return t
 }
 
