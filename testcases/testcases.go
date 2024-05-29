@@ -27,13 +27,13 @@ func GetTestcases() []Testcase {
 				{Type: token.LBRACE, Literal: []rune{'{'}},
 				{Type: token.RBRACE, Literal: []rune{'}'}},
 				{Type: token.LINEBREAK, Literal: []rune{'\n'}},
+        {Type: token.EOF, Literal: []rune{0}},
 			},
 		},
 		{
 			Text:     "",
 			Filename: "identifiers.do",
 			ExpectedTokens: []token.Token{
-
 				{Type: token.LET, Literal: []rune("let")},
 				{Type: token.IDENTIFIER, Literal: []rune("five")},
 				{Type: token.ASSIGN, Literal: []rune("=")},
@@ -77,7 +77,7 @@ func GetTestcases() []Testcase {
 	}
 
 	for _, test := range cases {
-		file := path.Join("./testcases", test.Filename)
+		file := path.Join("../testcases", test.Filename)
 		text, err := os.ReadFile(file)
 
 		if err != nil {
@@ -86,7 +86,6 @@ func GetTestcases() []Testcase {
 		}
 
 		test.Text = string(text)
-
 	}
 
 	return cases

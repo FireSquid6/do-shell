@@ -55,6 +55,7 @@ func ReadableTokenName(t Token) string {
     FLOAT: "FLOAT",
     RBRACKET: "RBRACKET",
     LBRACKET: "LBRACKET",
+    PLUS: "PLUS",
   }
 
   return tokenMap[t.Type]

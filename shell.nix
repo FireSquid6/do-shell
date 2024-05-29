@@ -6,5 +6,6 @@ with pkgs; mkShell {
   buildInputs = [
     nodejs_20
     go
+    delve
   ];
 }

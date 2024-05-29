@@ -10,7 +10,6 @@ func TestNextToken(t *testing.T) {
   tests := testcases.GetTestcases()
 
 	for _, test := range tests {
-		t.Log("New test -----------------")
 		l := New(test.Text)
 
 		for _, expected := range test.ExpectedTokens{

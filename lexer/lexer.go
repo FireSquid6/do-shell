@@ -41,8 +41,10 @@ func Tokenize(text string) []token.Token {
 }
 
 func New(input string) *Lexer {
+  fmt.Println(input)
 	l := &Lexer{input: []rune(input)}
 	l.readChar()
+  fmt.Println(l.ch)
 	return l
 }
 
