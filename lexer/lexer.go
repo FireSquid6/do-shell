@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"fmt"
 	"github.com/firesquid6/do-shell/token"
 )
 
@@ -9,21 +8,110 @@ type StateName int
 
 const (
 	IDENTIFIER StateName = iota
+	NORMAL
 	NUMBER
 	STRING
 	COMMAND
 )
 
 func Tokenize(text string) []token.Token {
-	tokens := []token.Token{}
-
-	return tokens
+	l := newLexer()
+	return l.LexText(text)
 }
 
 type Lexer struct {
 	states       map[StateName]LexerState
 	currentState StateName
-	status       LexerStatus
+	status       *LexerStatus
+}
+
+func newLexer() Lexer {
+	return Lexer{
+		states: map[StateName]LexerState{
+			NORMAL: &NormalState{},
+		},
+		currentState: NORMAL,
+		status: &LexerStatus{
+			Position: 0,
+		},
+	}
+}
+
+type NormalState struct{}
+
+func (s *NormalState) Process(ls *LexerStatus) {
+  for {
+    ls.EatWhitespace()
+    
+    switch ls.Ch {
+    case '+':
+      ls.AddToken(newToken(token.PLUS, ls.Ch))
+    case '=':
+      // TODO: peek
+      ls.AddToken(newToken(token.ASSIGN, ls.Ch))
+    case '(':
+      ls.AddToken(newToken(token.LPAREN, ls.Ch))
+    case ')':
+      ls.AddToken(newToken(token.RPAREN, ls.Ch))
+    case '{':
+      ls.AddToken(newToken(token.LBRACE, ls.Ch))
+    case '}':
+      ls.AddToken(newToken(token.RBRACE, ls.Ch))
+    case '[':
+      ls.CurrentState = COMMAND
+      return
+    case ',':
+      ls.AddToken(newToken(token.COMMA, ls.Ch))
+    case 10:  // linebreak
+      ls.AddToken(newToken(token.LINEBREAK, ls.Ch))
+    case 0:
+      ls.AddToken(newToken(token.EOF, ls.Ch))
+    case '"':
+      ls.CurrentState = STRING
+      return
+    case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+      ls.CurrentState = NUMBER
+      return
+    default:
+      if isLetter(ls.Ch) {
+        ls.CurrentState = IDENTIFIER
+        return
+      }
+      
+      ls.AddToken(newToken(token.ILLEGAL, ls.Ch))
+    }
+
+    ls.Advance()
+  }
+
+}
+
+
+type CommandState struct{}
+func (s *CommandState) Process(ls *LexerStatus) {
+  if ls.Ch != '[' {
+    panic("Tried to parse command state but didn't start with a '[")
+  }
+  
+  ls.Advance()
+  start := ls.Position
+  for ls.Ch != ']' || ls.Ch == 0 {
+    ls.Advance()
+  }
+
+  ls.AddToken(token.Token{Type: token.COMMAND, Literal: ls.Source[start:ls.Position]})
+}
+
+func (l *Lexer) LexText(text string) []token.Token {
+	l.status.Position = 0
+	l.status.Source = []rune(text)
+	l.status.Ch = l.status.Source[l.status.Position]
+
+	for l.status.Position < len(l.status.Source) {
+		l.Process()
+	}
+
+	return l.status.Tokens
 }
 
 func (l *Lexer) Process() {
@@ -32,29 +120,56 @@ func (l *Lexer) Process() {
 		panic("State not found. Firesquid screwed up programming real bad.")
 	}
 
-	newStatus := state.Process(&l.status)
-
-	if newStatus.position == l.status.position {
-		panic("Lexer did not advance position. In state " + fmt.Sprint(l.currentState))
-	}
-
+	state.Process(l.status)
+	// todo: ensure that something changed so that we don't get stuck in an infinite loop
+	l.status.EatWhitespace()
 }
 
 type LexerStatus struct {
-	position     int
-	ch           rune
-	source       []rune
-	tokens       []token.Token
-	currentState StateName
+	Position     int
+	Ch           rune
+	Source       []rune
+	Tokens       []token.Token
+	CurrentState StateName
 }
 
-type ProcessResult struct {
-  currentState StateName
-  position int
+func (l *LexerStatus) Advance() {
+	l.Position += 1
+
+	if l.Position >= len(l.Source) {
+		l.Ch = 0
+		l.Position -= 1
+		return
+	}
+
+	l.Ch = l.Source[l.Position]
+}
+
+func (l *LexerStatus) EatWhitespace() {
+	for l.Ch == ' ' || l.Ch == '\t' || l.Ch == '\r' {
+		l.Advance()
+	}
+}
+
+func (l *LexerStatus) PeekFor(ch rune) bool {
+	if l.Position+1 >= len(l.Source) {
+		return false
+	}
+
+	if l.Source[l.Position+1] == ch {
+		l.Advance()
+		return true
+	}
+
+	return false
+}
+
+func (l *LexerStatus) AddToken(t token.Token) {
+	l.Tokens = append(l.Tokens, t)
 }
 
 type LexerState interface {
-	Process(ls *LexerStatus) ProcessResult
+	Process(ls *LexerStatus)
 }
 
 //	func New(input string) *Lexer {

@@ -14,8 +14,9 @@ const (
 
 	// identifiers and literals
 	IDENTIFIER
-	INT
-  FLOAT
+  NUMBER
+  STRING
+  COMMAND
 
 	// operators
 	ASSIGN
@@ -29,8 +30,6 @@ const (
 	RPAREN
 	LBRACE
 	RBRACE
-  LBRACKET
-  RBRACKET
 
 	// keywords
 	FUNCTION
@@ -51,10 +50,9 @@ func ReadableTokenName(t Token) string {
     LINEBREAK: "LINEBREAK",
     FUNCTION: "FUNCTION",
     LET: "LET",
-    INT: "INT",
-    FLOAT: "FLOAT",
-    RBRACKET: "RBRACKET",
-    LBRACKET: "LBRACKET",
+    NUMBER: "NUMBER",
+    STRING: "STRING",
+    COMMAND: "COMMAND",
     PLUS: "PLUS",
   }
 
