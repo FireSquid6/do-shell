@@ -32,13 +32,12 @@ func (l *Lexer) Process() {
 		panic("State not found. Firesquid screwed up programming real bad.")
 	}
 
-	newStatus := state.Process(l.status)
+	newStatus := state.Process(&l.status)
 
 	if newStatus.position == l.status.position {
 		panic("Lexer did not advance position. In state " + fmt.Sprint(l.currentState))
 	}
 
-  l.status = newStatus
 }
 
 type LexerStatus struct {
@@ -49,8 +48,13 @@ type LexerStatus struct {
 	currentState StateName
 }
 
+type ProcessResult struct {
+  currentState StateName
+  position int
+}
+
 type LexerState interface {
-	Process(ls LexerStatus) LexerStatus
+	Process(ls *LexerStatus) ProcessResult
 }
 
 //	func New(input string) *Lexer {
