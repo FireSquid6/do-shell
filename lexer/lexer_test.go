@@ -1,14 +1,18 @@
 package lexer_test
 
 import (
+	"fmt"
+	"testing"
+
 	"github.com/firesquid6/do-shell/lexer"
 	"github.com/firesquid6/do-shell/testcases"
 	"github.com/firesquid6/do-shell/token"
-	"testing"
 )
 
 func TestNextToken(t *testing.T) {
+  fmt.Println("Hello world")
 	tests := testcases.GetTestcases()
+
 
 	for _, test := range tests {
 		tokens := lexer.Tokenize(test.Text)

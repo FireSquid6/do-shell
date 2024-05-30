@@ -3,6 +3,7 @@ package testcases
 import (
 	"os"
 	"path"
+  "fmt"
 
 	"github.com/firesquid6/do-shell/token"
 )
@@ -21,6 +22,7 @@ type Testcase struct {
 func GetTestcases() []Testcase {
 	// all text starts out as empty and is read into the testcases
 	cases := []Testcase{}
+  fmt.Println("Getting testcases")
 
 	expectations := []Expectation{
 		{

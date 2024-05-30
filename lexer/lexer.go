@@ -1,6 +1,8 @@
 package lexer
 
 import (
+	"fmt"
+
 	"github.com/firesquid6/do-shell/token"
 )
 
@@ -30,6 +32,8 @@ func newLexer() Lexer {
 		states: map[StateName]LexerState{
 			NORMAL: &NormalState{},
       COMMAND: &CommandState{},
+      NUMBER: &NumberState{},
+      STRING: &StringState{},
 		},
 		currentState: NORMAL,
 		status: &LexerStatus{
@@ -37,6 +41,27 @@ func newLexer() Lexer {
 		},
 	}
 }
+
+type StringState struct{}
+func (s *StringState) Process(ls *LexerStatus) {
+  if ls.Ch != '"' {
+    panic("Tried to parse string state but didn't start with a '\"")
+  }
+
+  ls.Advance()
+  start := ls.Position
+  for ls.Ch != '"' || ls.Ch == 0 {
+    ls.Advance()
+  }
+
+  if ls.Ch == 0 {
+    ls.AddToken(token.Token{Type: token.ILLEGAL, Literal: ls.Source[start:ls.Position]})
+    return
+  }
+
+  ls.AddToken(token.Token{Type: token.STRING, Literal: ls.Source[start:ls.Position]})
+}
+
 
 type NumberState struct{}
 func (s *NumberState) Process(ls *LexerStatus) {
@@ -98,6 +123,7 @@ func (s *NormalState) Process(ls *LexerStatus) {
     case '.':
       ls.AddToken(newToken(token.DOT, ls.Ch))
     case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+      fmt.Println("Moving to number state")
       ls.CurrentState = NUMBER
       return
     default:
@@ -161,6 +187,7 @@ func (l *Lexer) Process() {
 		panic("State not found. Firesquid screwed up programming real bad.")
 	}
 
+  fmt.Println("Processing state", l.currentState)
 	state.Process(l.status)
 	// todo: ensure that something changed so that we don't get stuck in an infinite loop
 	l.status.EatWhitespace()
