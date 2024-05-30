@@ -24,7 +24,8 @@ const (
 
 	// delimiters
 	COMMA
-  LINEBREAK
+  SEMICOLON
+  DOT
 
 	LPAREN
 	RPAREN
@@ -47,8 +48,9 @@ func ReadableTokenName(t Token) string {
     LBRACE: "LBRACE",
     RBRACE: "RBRACE",
     COMMA: "COMMA",
-    LINEBREAK: "LINEBREAK",
+    SEMICOLON: "SEMICOLON",
     FUNCTION: "FUNCTION",
+    DOT: "DOT",
     LET: "LET",
     NUMBER: "NUMBER",
     STRING: "STRING",

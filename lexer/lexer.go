@@ -29,12 +29,38 @@ func newLexer() Lexer {
 	return Lexer{
 		states: map[StateName]LexerState{
 			NORMAL: &NormalState{},
+      COMMAND: &CommandState{},
 		},
 		currentState: NORMAL,
 		status: &LexerStatus{
 			Position: 0,
 		},
 	}
+}
+
+type NumberState struct{}
+func (s *NumberState) Process(ls *LexerStatus) {
+  start := ls.Position
+
+  for isDigit(ls.Ch) || ls.Ch == '.' {
+    ls.Advance()
+  }
+
+  literal := ls.Source[start:ls.Position]
+  var seenDecimal bool = false
+
+  // ensures that there is only one decimal point and it is at an appropriate place
+  for i, ch := range literal {
+    if ch == '.' {
+      if seenDecimal || i == 0 || i == len(literal) - 1 {
+        ls.AddToken(token.Token{Type: token.ILLEGAL, Literal: literal})
+        return
+      }
+      seenDecimal = true
+    }
+  }
+
+  ls.AddToken(token.Token{Type: token.NUMBER, Literal: literal})
 }
 
 type NormalState struct{}
@@ -62,13 +88,15 @@ func (s *NormalState) Process(ls *LexerStatus) {
       return
     case ',':
       ls.AddToken(newToken(token.COMMA, ls.Ch))
-    case 10:  // linebreak
-      ls.AddToken(newToken(token.LINEBREAK, ls.Ch))
+    case ';':  // lines end in semicolons
+      ls.AddToken(newToken(token.SEMICOLON, ls.Ch))
     case 0:
       ls.AddToken(newToken(token.EOF, ls.Ch))
     case '"':
       ls.CurrentState = STRING
       return
+    case '.':
+      ls.AddToken(newToken(token.DOT, ls.Ch))
     case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
       ls.CurrentState = NUMBER
       return
@@ -86,6 +114,17 @@ func (s *NormalState) Process(ls *LexerStatus) {
 
 }
 
+type IdentifierState struct{}
+func (s *IdentifierState) Process(ls *LexerStatus) {
+  start := ls.Position
+  for isLetter(ls.Ch) {
+    ls.Advance()
+  }
+
+  literal := ls.Source[start:ls.Position]
+  tokenType := token.LookupIdentifier(literal)
+  ls.AddToken(token.Token{Type: tokenType, Literal: literal})
+}
 
 type CommandState struct{}
 func (s *CommandState) Process(ls *LexerStatus) {
@@ -96,6 +135,8 @@ func (s *CommandState) Process(ls *LexerStatus) {
   ls.Advance()
   start := ls.Position
   for ls.Ch != ']' || ls.Ch == 0 {
+    // TODO: handle escape characters
+    // TODO: handle if user
     ls.Advance()
   }
 
@@ -146,7 +187,7 @@ func (l *LexerStatus) Advance() {
 }
 
 func (l *LexerStatus) EatWhitespace() {
-	for l.Ch == ' ' || l.Ch == '\t' || l.Ch == '\r' {
+	for l.Ch == ' ' || l.Ch == '\t' || l.Ch == '\r' || l.Ch == '\n' {
 		l.Advance()
 	}
 }
@@ -172,108 +213,6 @@ type LexerState interface {
 	Process(ls *LexerStatus)
 }
 
-//	func New(input string) *Lexer {
-//		if len(input) == 0 {
-//			return nil
-//		}
-//
-//		fmt.Println(input)
-//		l := &Lexer{input: []rune(input)}
-//
-//		l.position = 0
-//		l.ch = l.input[l.position]
-//
-//		return l
-//	}
-//
-//	func (l *Lexer) advance() {
-//		l.position += 1
-//
-//		if l.position >= len(l.input) {
-//			l.ch = 0
-//			l.position -= 1
-//			return
-//		}
-//
-//		l.ch = l.input[l.position]
-//
-//		fmt.Println("Advance: ", string(l.ch), " ", l.ch)
-//	}
-//
-//	func (l *Lexer) eatWhitespace() {
-//		for l.ch == ' ' || l.ch == '\t' || l.ch == '\r' {
-//			l.advance()
-//		}
-//	}
-//
-//	func (l *Lexer) readIdentifier() []rune {
-//		position := l.position
-//
-//		for isLetter(l.ch) {
-//			l.advance()
-//		}
-//
-//		return l.input[position:l.position]
-//	}
-//
-//	func (l *Lexer) NextToken() token.Token {
-//		var t token.Token
-//
-//		fmt.Println("currently reading: ", string(l.ch), " ", l.ch)
-//
-//		switch l.ch {
-//		// simple single character tokens
-//		case '=':
-//			t = newToken(token.ASSIGN, l.ch)
-//		case 10:
-//			fmt.Println("Linebreak")
-//			t = newToken(token.LINEBREAK, l.ch)
-//		case '(':
-//			t = newToken(token.LPAREN, l.ch)
-//		case ')':
-//			t = newToken(token.RPAREN, l.ch)
-//		case '{':
-//			t = newToken(token.LBRACE, l.ch)
-//		case '}':
-//			t = newToken(token.RBRACE, l.ch)
-//		case '[':
-//			t = newToken(token.LBRACKET, l.ch)
-//		case ']':
-//			t = newToken(token.RBRACKET, l.ch)
-//		case '+':
-//			t = newToken(token.PLUS, l.ch)
-//		case 0:
-//			t.Literal = []rune{0}
-//			t.Type = token.EOF
-//		default:
-//			if isLetter(l.ch) {
-//				t.Literal = l.readIdentifier()
-//				t.Type = token.LookupIdentifier(t.Literal)
-//				return t
-//			} else if isDigit(l.ch) {
-//				t = l.readNumber()
-//			} else {
-//				t = newToken(token.ILLEGAL, l.ch)
-//			}
-//		}
-//
-//		l.advance()
-//		l.eatWhitespace()
-//		fmt.Println("NextToken: ", token.ReadableTokenName(t), " ", string(t.Literal))
-//		return t
-//	}
-//
-//	func (l *Lexer) readNumber() token.Token {
-//		position := l.position
-//		t := token.Token{Type: token.INT, Literal: []rune{}}
-//
-//		for isDigit(l.ch) {
-//			l.advance()
-//		}
-//
-//		t.Literal = l.input[position:l.position]
-//		return t
-//	}
 func newToken(tokenType token.TokenType, ch rune) token.Token {
 	return token.Token{Type: tokenType, Literal: []rune{ch}}
 }
