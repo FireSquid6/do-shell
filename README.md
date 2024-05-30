@@ -29,3 +29,15 @@ let myvar = 10
 
 
 Do shell is meant for when you need to do a bit more programming than what would be comfortable in a bash script, but you still need to make frequent
+
+
+# current scope
+By the end of june, do shell will provide:
+- an interpreter for do shell
+- tree sitter bindings for do shell
+
+Later I may try to create an LSP, but it's a bit out of scope at the moment.
+
+
+# contributions
+This is mostly a personal project, so i'd like to work on it on my own. Feel free to create issues though!
