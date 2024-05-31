@@ -85,6 +85,7 @@ func (l *Lexer) PeekForLetter() bool {
 }
 
 func (l *Lexer) ProcessString() {
+  // TODO: handle escape characters
 	if l.Ch != '"' {
 		panic("Tried to parse string state but didn't start with a '\"")
 	}

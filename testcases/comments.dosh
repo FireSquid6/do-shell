@@ -1,5 +1,5 @@
-let mystuff = "whatever"
+let mystuff = "whatever";
 
 # this is a comment describing what I just did
 
-let otherstuff = "this comes after the comment"  # this comment happens after the previous stuff
+let otherstuff = "this comes after the comment";  # this comment happens after the previous stuff

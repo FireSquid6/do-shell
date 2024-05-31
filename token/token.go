@@ -16,7 +16,7 @@ const (
 	IDENTIFIER
   NUMBER
   STRING
-  COMMAND
+  COMMAND_SEGMENT
 
 	// operators
 	ASSIGN
@@ -37,6 +37,7 @@ const (
 	COMMA
   SEMICOLON
   DOT
+  GRAVE
 
 	LPAREN
 	RPAREN
@@ -47,6 +48,7 @@ const (
 	FUNCTION
 	LET
   FOR
+  IN
   ELSE
   IF
 )
@@ -68,7 +70,7 @@ func ReadableTokenName(t Token) string {
     LET: "LET",
     NUMBER: "NUMBER",
     STRING: "STRING",
-    COMMAND: "COMMAND",
+    COMMAND_SEGMENT: "COMMAND_SEGMENT",
     PLUS: "PLUS",
   }
 
