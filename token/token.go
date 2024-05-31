@@ -20,7 +20,18 @@ const (
 
 	// operators
 	ASSIGN
+
 	PLUS
+  MINUS
+  DIVIDE
+  MULTIPLY
+  MOD
+
+  GREATER_THAN
+  LESS_THAN
+  GREATER_THAN_EQUAL
+  LESS_THAN_EQUAL
+  EQUAL
 
 	// delimiters
 	COMMA
@@ -35,6 +46,9 @@ const (
 	// keywords
 	FUNCTION
 	LET
+  FOR
+  ELSE
+  IF
 )
 
 func ReadableTokenName(t Token) string {
