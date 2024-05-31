@@ -26,7 +26,7 @@ func GetTestcases() []Testcase {
 
 	expectations := []Expectation{
 		{
-      Filename: "basic_symbols.do",
+      Filename: "basic_symbols.dosh",
 			Tokens: []token.Token{
 				{Type: token.PLUS, Literal: []rune{'+'}},
 				{Type: token.ASSIGN, Literal: []rune{'='}},
@@ -39,7 +39,7 @@ func GetTestcases() []Testcase {
 			},
 		},
 		{
-      Filename: "identifiers.do",
+      Filename: "identifiers.dosh",
 			Tokens: []token.Token{
 				{Type: token.LET, Literal: []rune("let")},
 				{Type: token.IDENTIFIER, Literal: []rune("five")},

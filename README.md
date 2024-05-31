@@ -41,3 +41,4 @@ Later I may try to create an LSP, but it's a bit out of scope at the moment.
 
 # contributions
 This is mostly a personal project, so i'd like to work on it on my own. Feel free to create issues though!
+
