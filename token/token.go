@@ -61,7 +61,6 @@ func ReadableTokenName(t Token) string {
   return tokenMap[t.Type]
 }
 
-
 func LookupIdentifier(literal []rune) TokenType {
   tokenMap := map[string]TokenType {
     "let": LET,

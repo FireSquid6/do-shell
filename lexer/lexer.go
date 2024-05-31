@@ -6,202 +6,27 @@ import (
 	"github.com/firesquid6/do-shell/token"
 )
 
-type StateName int
-
-const (
-	IDENTIFIER StateName = iota
-	NORMAL
-	NUMBER
-	STRING
-	COMMAND
-)
-
 func Tokenize(text string) []token.Token {
-	l := newLexer()
-	return l.LexText(text)
+  fmt.Println("Starting new tokenization ------------")
+	l := Lexer{}
+	l.LexText(text)
+
+	return l.Tokens
 }
 
 type Lexer struct {
-	states       map[StateName]LexerState
-	currentState StateName
-	status       *LexerStatus
+	Position int
+	Ch       rune
+	Source   []rune
+	Tokens   []token.Token
 }
 
-func newLexer() Lexer {
-	return Lexer{
-		states: map[StateName]LexerState{
-			NORMAL: &NormalState{},
-      COMMAND: &CommandState{},
-      NUMBER: &NumberState{},
-      STRING: &StringState{},
-		},
-		currentState: NORMAL,
-		status: &LexerStatus{
-			Position: 0,
-		},
-	}
+func (l *Lexer) AddToken(t token.Token) {
+	l.Tokens = append(l.Tokens, t)
+  fmt.Println("Added token: ", token.ReadableTokenName(t))
 }
 
-type StringState struct{}
-func (s *StringState) Process(ls *LexerStatus) {
-  if ls.Ch != '"' {
-    panic("Tried to parse string state but didn't start with a '\"")
-  }
-
-  ls.Advance()
-  start := ls.Position
-  for ls.Ch != '"' || ls.Ch == 0 {
-    ls.Advance()
-  }
-
-  if ls.Ch == 0 {
-    ls.AddToken(token.Token{Type: token.ILLEGAL, Literal: ls.Source[start:ls.Position]})
-    return
-  }
-
-  ls.AddToken(token.Token{Type: token.STRING, Literal: ls.Source[start:ls.Position]})
-}
-
-
-type NumberState struct{}
-func (s *NumberState) Process(ls *LexerStatus) {
-  start := ls.Position
-
-  for isDigit(ls.Ch) || ls.Ch == '.' {
-    ls.Advance()
-  }
-
-  literal := ls.Source[start:ls.Position]
-  var seenDecimal bool = false
-
-  // ensures that there is only one decimal point and it is at an appropriate place
-  for i, ch := range literal {
-    if ch == '.' {
-      if seenDecimal || i == 0 || i == len(literal) - 1 {
-        ls.AddToken(token.Token{Type: token.ILLEGAL, Literal: literal})
-        return
-      }
-      seenDecimal = true
-    }
-  }
-
-  ls.AddToken(token.Token{Type: token.NUMBER, Literal: literal})
-}
-
-type NormalState struct{}
-
-func (s *NormalState) Process(ls *LexerStatus) {
-  for {
-    ls.EatWhitespace()
-    
-    switch ls.Ch {
-    case '+':
-      ls.AddToken(newToken(token.PLUS, ls.Ch))
-    case '=':
-      // TODO: peek
-      ls.AddToken(newToken(token.ASSIGN, ls.Ch))
-    case '(':
-      ls.AddToken(newToken(token.LPAREN, ls.Ch))
-    case ')':
-      ls.AddToken(newToken(token.RPAREN, ls.Ch))
-    case '{':
-      ls.AddToken(newToken(token.LBRACE, ls.Ch))
-    case '}':
-      ls.AddToken(newToken(token.RBRACE, ls.Ch))
-    case '[':
-      ls.CurrentState = COMMAND
-      return
-    case ',':
-      ls.AddToken(newToken(token.COMMA, ls.Ch))
-    case ';':  // lines end in semicolons
-      ls.AddToken(newToken(token.SEMICOLON, ls.Ch))
-    case 0:
-      ls.AddToken(newToken(token.EOF, ls.Ch))
-    case '"':
-      ls.CurrentState = STRING
-      return
-    case '.':
-      ls.AddToken(newToken(token.DOT, ls.Ch))
-    case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-      fmt.Println("Moving to number state")
-      ls.CurrentState = NUMBER
-      return
-    default:
-      if isLetter(ls.Ch) {
-        ls.CurrentState = IDENTIFIER
-        return
-      }
-      
-      ls.AddToken(newToken(token.ILLEGAL, ls.Ch))
-    }
-
-    ls.Advance()
-  }
-
-}
-
-type IdentifierState struct{}
-func (s *IdentifierState) Process(ls *LexerStatus) {
-  start := ls.Position
-  for isLetter(ls.Ch) {
-    ls.Advance()
-  }
-
-  literal := ls.Source[start:ls.Position]
-  tokenType := token.LookupIdentifier(literal)
-  ls.AddToken(token.Token{Type: tokenType, Literal: literal})
-}
-
-type CommandState struct{}
-func (s *CommandState) Process(ls *LexerStatus) {
-  if ls.Ch != '[' {
-    panic("Tried to parse command state but didn't start with a '[")
-  }
-  
-  ls.Advance()
-  start := ls.Position
-  for ls.Ch != ']' || ls.Ch == 0 {
-    // TODO: handle escape characters
-    // TODO: handle if user
-    ls.Advance()
-  }
-
-  ls.AddToken(token.Token{Type: token.COMMAND, Literal: ls.Source[start:ls.Position]})
-}
-
-func (l *Lexer) LexText(text string) []token.Token {
-	l.status.Position = 0
-	l.status.Source = []rune(text)
-	l.status.Ch = l.status.Source[l.status.Position]
-
-	for l.status.Position < len(l.status.Source) {
-		l.Process()
-	}
-
-	return l.status.Tokens
-}
-
-func (l *Lexer) Process() {
-	state, ok := l.states[l.currentState]
-	if !ok {
-		panic("State not found. Firesquid screwed up programming real bad.")
-	}
-
-  fmt.Println("Processing state", l.currentState)
-	state.Process(l.status)
-	// todo: ensure that something changed so that we don't get stuck in an infinite loop
-	l.status.EatWhitespace()
-}
-
-type LexerStatus struct {
-	Position     int
-	Ch           rune
-	Source       []rune
-	Tokens       []token.Token
-	CurrentState StateName
-}
-
-func (l *LexerStatus) Advance() {
+func (l *Lexer) Advance() {
 	l.Position += 1
 
 	if l.Position >= len(l.Source) {
@@ -211,15 +36,16 @@ func (l *LexerStatus) Advance() {
 	}
 
 	l.Ch = l.Source[l.Position]
+  fmt.Println("Now looking at: ", string(l.Ch))
 }
 
-func (l *LexerStatus) EatWhitespace() {
+func (l *Lexer) EatWhitespace() {
 	for l.Ch == ' ' || l.Ch == '\t' || l.Ch == '\r' || l.Ch == '\n' {
 		l.Advance()
 	}
 }
 
-func (l *LexerStatus) PeekFor(ch rune) bool {
+func (l *Lexer) PeekFor(ch rune) bool {
 	if l.Position+1 >= len(l.Source) {
 		return false
 	}
@@ -232,12 +58,161 @@ func (l *LexerStatus) PeekFor(ch rune) bool {
 	return false
 }
 
-func (l *LexerStatus) AddToken(t token.Token) {
-	l.Tokens = append(l.Tokens, t)
+func (l *Lexer) PeekForNumber() bool {
+  if l.Position+1 >= len(l.Source) {
+    return false
+  }
+
+  if isDigit(l.Source[l.Position+1]) {
+    l.Advance()
+    return true
+  }
+
+  return false
 }
 
-type LexerState interface {
-	Process(ls *LexerStatus)
+func (l *Lexer) PeekForLetter() bool {
+  if l.Position+1 >= len(l.Source) {
+    return false
+  }
+
+  if isLetter(l.Source[l.Position+1]) {
+    l.Advance()
+    return true
+  }
+
+  return false
+}
+
+func (l *Lexer) ProcessString() {
+	if l.Ch != '"' {
+		panic("Tried to parse string state but didn't start with a '\"")
+	}
+
+	l.Advance()
+	start := l.Position
+	for l.Ch != '"' || l.Ch == 0 {
+		l.Advance()
+	}
+
+	if l.Ch == 0 {
+		l.AddToken(token.Token{Type: token.ILLEGAL, Literal: l.Source[start:l.Position]})
+		return
+	}
+
+	l.AddToken(token.Token{Type: token.STRING, Literal: l.Source[start:l.Position]})
+}
+
+func (l *Lexer) ProcessNumber() {
+	start := l.Position
+
+	for l.PeekForNumber() {}
+
+	literal := l.Source[start:l.Position+1]
+	var seenDecimal bool = false
+
+	// ensures that there is only one decimal point and it is at an appropriate place
+	for i, ch := range literal {
+		if ch == '.' {
+			if seenDecimal || i == 0 || i == len(literal)-1 {
+				l.AddToken(token.Token{Type: token.ILLEGAL, Literal: literal})
+				return
+			}
+			seenDecimal = true
+		}
+	}
+
+
+  fmt.Println("Adding number: ", string(literal))
+
+	l.AddToken(token.Token{Type: token.NUMBER, Literal: literal})
+}
+
+func (l *Lexer) Process() {
+	finished := false
+	for !finished {
+		l.EatWhitespace()
+    fmt.Println("Processing: ", string(l.Ch))
+
+		switch l.Ch {
+		case '+':
+			l.AddToken(newToken(token.PLUS, l.Ch))
+		case '=':
+			// TODO: peek
+			l.AddToken(newToken(token.ASSIGN, l.Ch))
+		case '(':
+			l.AddToken(newToken(token.LPAREN, l.Ch))
+		case ')':
+			l.AddToken(newToken(token.RPAREN, l.Ch))
+		case '{':
+			l.AddToken(newToken(token.LBRACE, l.Ch))
+		case '}':
+			l.AddToken(newToken(token.RBRACE, l.Ch))
+		case '[':
+			l.ProcessCommand()
+		case ',':
+			l.AddToken(newToken(token.COMMA, l.Ch))
+		case ';': // lines end in semicolons
+			l.AddToken(newToken(token.SEMICOLON, l.Ch))
+		case 0:
+			l.AddToken(newToken(token.EOF, l.Ch))
+			finished = true
+		case '"':
+			l.ProcessString()
+		case '.':
+			l.AddToken(newToken(token.DOT, l.Ch))
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			l.ProcessNumber()
+		default:
+			if isLetter(l.Ch) {
+				l.ProcessIdentifier()
+			} else {
+        l.AddToken(newToken(token.ILLEGAL, l.Ch))
+      }
+		}
+
+    // when this happens after a processing of a number or letter, it will skip a character that needs to be read
+    // to be fixed
+		l.Advance()
+	}
+
+}
+
+func (l *Lexer) ProcessIdentifier() {
+	start := l.Position
+
+  for l.PeekForLetter() {}
+
+	literal := l.Source[start:l.Position+1]
+	tokenType := token.LookupIdentifier(literal)
+
+	l.AddToken(token.Token{Type: tokenType, Literal: literal})
+}
+
+func (l *Lexer) ProcessCommand() {
+	if l.Ch != '[' {
+		panic("Tried to parse command state but didn't start with a '[")
+	}
+
+	l.Advance()
+	start := l.Position
+	for l.Ch != ']' || l.Ch == 0 {
+		// TODO: handle escape characters
+		// TODO: handle if user
+		l.Advance()
+	}
+
+	l.AddToken(token.Token{Type: token.COMMAND, Literal: l.Source[start:l.Position]})
+}
+
+func (l *Lexer) LexText(text string) []token.Token {
+	l.Position = 0
+	l.Source = []rune(text)
+	l.Ch = l.Source[l.Position]
+
+	l.Process()
+
+	return l.Tokens
 }
 
 func newToken(tokenType token.TokenType, ch rune) token.Token {

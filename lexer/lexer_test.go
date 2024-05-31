@@ -1,7 +1,6 @@
 package lexer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/firesquid6/do-shell/lexer"
@@ -10,7 +9,6 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-  fmt.Println("Hello world")
 	tests := testcases.GetTestcases()
 
 
