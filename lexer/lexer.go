@@ -84,6 +84,13 @@ func (l *Lexer) PeekForLetter() bool {
   return false
 }
 
+
+func (l *Lexer) SkipComment() {
+  for l.Ch != '\n' {
+    l.Advance()
+  }
+}
+
 func (l *Lexer) ProcessString() {
   // TODO: handle escape characters
 	if l.Ch != '"' {
@@ -160,6 +167,8 @@ func (l *Lexer) Process() {
 			finished = true
 		case '"':
 			l.ProcessString()
+    case '#':
+      l.SkipComment()
 		case '.':
 			l.AddToken(newToken(token.DOT, l.Ch))
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
@@ -191,19 +200,21 @@ func (l *Lexer) ProcessIdentifier() {
 }
 
 func (l *Lexer) ProcessCommand() {
-	if l.Ch != '[' {
-		panic("Tried to parse command state but didn't start with a '[")
+	if l.Ch != '`' {
+		panic("Tried to parse command state but didn't start with a '`")
 	}
 
 	l.Advance()
 	start := l.Position
-	for l.Ch != ']' || l.Ch == 0 {
-		// TODO: handle escape characters
-		// TODO: handle if user
+	for l.Ch != '`' || l.Ch == 0 || l.Ch == '{' {
+    if l.Ch == '{' {
+      // fuck me
+      fmt.Println("escaping from commands is not implemented yet. Sorry.")
+    }
 		l.Advance()
 	}
 
-	l.AddToken(token.Token{Type: token.COMMAND, Literal: l.Source[start:l.Position]})
+	l.AddToken(token.Token{Type: token.COMMAND_SEGMENT, Literal: l.Source[start:l.Position]})
 }
 
 func (l *Lexer) LexText(text string) []token.Token {
