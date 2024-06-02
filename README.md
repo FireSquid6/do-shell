@@ -34,9 +34,12 @@ Do shell is meant for when you need to do a bit more programming than what would
 # current scope
 By the end of june, do shell will provide:
 - an interpreter for do shell
-- tree sitter bindings for do shell
+- a standard library for do shell
 
-Later I may try to create an LSP, but it's a bit out of scope at the moment.
+Later I plan to provide:
+- an lsp
+- tree sitter bindings
+- a nix package
 
 
 # contributions
