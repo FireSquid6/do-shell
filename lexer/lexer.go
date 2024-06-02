@@ -92,7 +92,6 @@ func (l *Lexer) SkipComment() {
 }
 
 func (l *Lexer) ProcessString() {
-  // TODO: handle escape characters
 	if l.Ch != '"' {
 		panic("Tried to parse string state but didn't start with a '\"")
 	}
@@ -146,7 +145,6 @@ func (l *Lexer) Process() {
 		case '+':
 			l.AddToken(newToken(token.PLUS, l.Ch))
 		case '=':
-			// TODO: peek
       if l.PeekFor('=') {
         l.AddToken(token.Token{Type: token.EQUAL, Literal: []rune{'=', '='} })
       } else {
