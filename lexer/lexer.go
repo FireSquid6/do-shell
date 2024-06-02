@@ -149,13 +149,13 @@ func (l *Lexer) Process() {
       }
     case '>':
       if l.PeekFor('=') {
-        l.AddToken(token.Token{Type: token.LESS_THAN_EQUAL, Literal: []rune{'>', '='} })
+        l.AddToken(token.Token{Type: token.GREATER_THAN_EQUAL, Literal: []rune{'>', '='} })
       } else {
         l.AddToken(newToken(token.GREATER_THAN, l.Ch))
       }
     case '!':
       if l.PeekFor('=') {
-        l.AddToken(token.Token{Type: token.LESS_THAN_EQUAL, Literal: []rune{'!', '='} })
+        l.AddToken(token.Token{Type: token.NOT_EQUAL, Literal: []rune{'!', '='} })
       } else {
         l.AddToken(newToken(token.NOT, l.Ch))
       }
