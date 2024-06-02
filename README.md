@@ -16,8 +16,8 @@ fn add(a, b) {
 let myvar = 10
 
 # brackets execute bash commands
-# $() escapes back into do shell land
-[echo "I have $(10) dollars"]
+# {} escapes back into do shell land
+`echo "I have {10} dollars"`
 
 # commands return an object containing:
 # - the stderror
