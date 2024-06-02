@@ -16,7 +16,7 @@ const (
 	IDENTIFIER
   NUMBER
   STRING
-  COMMAND_SEGMENT
+  COMMAND
 
 	// operators
 	ASSIGN
@@ -26,6 +26,9 @@ const (
   DIVIDE
   MULTIPLY
   MOD
+
+  NOT
+  NOT_EQUAL
 
   GREATER_THAN
   LESS_THAN
@@ -37,7 +40,6 @@ const (
 	COMMA
   SEMICOLON
   DOT
-  GRAVE
 
 	LPAREN
 	RPAREN
@@ -70,8 +72,18 @@ func ReadableTokenName(t Token) string {
     LET: "LET",
     NUMBER: "NUMBER",
     STRING: "STRING",
-    COMMAND_SEGMENT: "COMMAND_SEGMENT",
+    COMMAND: "COMMAND",
     PLUS: "PLUS",
+    IF: "IF",
+    ELSE: "ELSE",
+    FOR: "FOR",
+    IN: "IN",
+    MULTIPLY: "MULTIPLY",
+    EQUAL: "EQUAL",
+    GREATER_THAN: "GREATER_THAN",
+    LESS_THAN: "LESS_THAN",
+    GREATER_THAN_EQUAL: "GREATER_THAN_EQUAL",
+    LESS_THAN_EQUAL: "LESS_THAN_EQUAL",
   }
 
   return tokenMap[t.Type]
@@ -81,6 +93,10 @@ func LookupIdentifier(literal []rune) TokenType {
   tokenMap := map[string]TokenType {
     "let": LET,
     "fn": FUNCTION,
+    "if": IF,
+    "else": ELSE,
+    "for": FOR,
+    "in": IN,
   }
 
   if token, ok := tokenMap[string(literal)]; ok {

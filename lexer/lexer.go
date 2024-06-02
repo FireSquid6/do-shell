@@ -147,7 +147,29 @@ func (l *Lexer) Process() {
 			l.AddToken(newToken(token.PLUS, l.Ch))
 		case '=':
 			// TODO: peek
-			l.AddToken(newToken(token.ASSIGN, l.Ch))
+      if l.PeekFor('=') {
+        l.AddToken(token.Token{Type: token.EQUAL, Literal: []rune{'=', '='} })
+      } else {
+        l.AddToken(newToken(token.ASSIGN, l.Ch))
+      }
+    case '<':
+      if l.PeekFor('=') {
+        l.AddToken(token.Token{Type: token.LESS_THAN_EQUAL, Literal: []rune{'<', '='} })
+      } else {
+        l.AddToken(newToken(token.LESS_THAN, l.Ch))
+      }
+    case '>':
+      if l.PeekFor('=') {
+        l.AddToken(token.Token{Type: token.LESS_THAN_EQUAL, Literal: []rune{'>', '='} })
+      } else {
+        l.AddToken(newToken(token.GREATER_THAN, l.Ch))
+      }
+    case '!':
+      if l.PeekFor('=') {
+        l.AddToken(token.Token{Type: token.LESS_THAN_EQUAL, Literal: []rune{'!', '='} })
+      } else {
+        l.AddToken(newToken(token.NOT, l.Ch))
+      }
 		case '(':
 			l.AddToken(newToken(token.LPAREN, l.Ch))
 		case ')':
@@ -156,7 +178,7 @@ func (l *Lexer) Process() {
 			l.AddToken(newToken(token.LBRACE, l.Ch))
 		case '}':
 			l.AddToken(newToken(token.RBRACE, l.Ch))
-		case '[':
+		case '`':
 			l.ProcessCommand()
 		case ',':
 			l.AddToken(newToken(token.COMMA, l.Ch))
@@ -169,6 +191,12 @@ func (l *Lexer) Process() {
 			l.ProcessString()
     case '#':
       l.SkipComment()
+    case '*':
+      l.AddToken(newToken(token.MULTIPLY, l.Ch))
+    case '%':
+      l.AddToken(newToken(token.MOD, l.Ch))
+    case '-':
+      l.AddToken(newToken(token.MINUS, l.Ch))
 		case '.':
 			l.AddToken(newToken(token.DOT, l.Ch))
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
@@ -206,15 +234,11 @@ func (l *Lexer) ProcessCommand() {
 
 	l.Advance()
 	start := l.Position
-	for l.Ch != '`' || l.Ch == 0 || l.Ch == '{' {
-    if l.Ch == '{' {
-      // fuck me
-      fmt.Println("escaping from commands is not implemented yet. Sorry.")
-    }
+	for l.Ch != '`' || l.Ch == 0 {
 		l.Advance()
 	}
 
-	l.AddToken(token.Token{Type: token.COMMAND_SEGMENT, Literal: l.Source[start:l.Position]})
+	l.AddToken(token.Token{Type: token.COMMAND, Literal: l.Source[start:l.Position]})
 }
 
 func (l *Lexer) LexText(text string) []token.Token {
