@@ -109,6 +109,14 @@ func GetTestcases() []Testcase {
       },
     },
     {
+      Filename: "comparisons.dosh",
+      Tokens: []token.Token{
+        {Type: token.LET, Literal: []rune("let")},
+        {Type: token.IDENTIFIER, Literal: []rune("x")},
+
+      },
+    },
+    {
       Filename: "comments.dosh",
       Tokens: []token.Token{
         {Type: token.LET, Literal: []rune("let")},
