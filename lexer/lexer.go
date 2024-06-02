@@ -1,13 +1,10 @@
 package lexer
 
 import (
-	"fmt"
-
 	"github.com/firesquid6/do-shell/token"
 )
 
 func Tokenize(text string) []token.Token {
-  fmt.Println("Starting new tokenization ------------")
 	l := Lexer{}
 	l.LexText(text)
 
@@ -23,7 +20,6 @@ type Lexer struct {
 
 func (l *Lexer) AddToken(t token.Token) {
 	l.Tokens = append(l.Tokens, t)
-  fmt.Println("Added token: ", token.ReadableTokenName(t))
 }
 
 func (l *Lexer) Advance() {
@@ -36,7 +32,6 @@ func (l *Lexer) Advance() {
 	}
 
 	l.Ch = l.Source[l.Position]
-  fmt.Println("Now looking at: ", string(l.Ch))
 }
 
 func (l *Lexer) EatWhitespace() {
@@ -129,9 +124,6 @@ func (l *Lexer) ProcessNumber() {
 		}
 	}
 
-
-  fmt.Println("Adding number: ", string(literal))
-
 	l.AddToken(token.Token{Type: token.NUMBER, Literal: literal})
 }
 
@@ -139,7 +131,6 @@ func (l *Lexer) Process() {
 	finished := false
 	for !finished {
 		l.EatWhitespace()
-    fmt.Println("Processing: ", string(l.Ch))
 
 		switch l.Ch {
 		case '+':
