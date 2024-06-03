@@ -22,6 +22,25 @@ func GetTestcases() []Testcase {
 	cases := []Testcase{}
 
 	expectations := []Expectation{
+    {
+      Filename: "let_statements.dosh",
+      Tokens: []token.Token{
+        {Type: token.LET, Literal: []rune("let")},
+        {Type: token.IDENTIFIER, Literal: []rune("x")},
+        {Type: token.ASSIGN, Literal: []rune("=")},
+        {Type: token.NUMBER, Literal: []rune("5")},
+        {Type: token.SEMICOLON, Literal: []rune(";")},
+        {Type: token.LET, Literal: []rune("let")},
+        {Type: token.IDENTIFIER, Literal: []rune("y")},
+        {Type: token.ASSIGN, Literal: []rune("=")},
+        {Type: token.NUMBER, Literal: []rune("10")},
+        {Type: token.SEMICOLON, Literal: []rune(";")},
+        {Type: token.LET, Literal: []rune("let")},
+        {Type: token.IDENTIFIER, Literal: []rune("foobar")},
+        {Type: token.ASSIGN, Literal: []rune("=")},
+        {Type: token.NUMBER, Literal: []rune("12312")},
+      },
+    },
 		{
       Filename: "basic_symbols.dosh",
 			Tokens: []token.Token{
