@@ -55,6 +55,15 @@ func testLetStatement(t *testing.T, s tree.Statement, name string) bool {
     return false
   }
 
+  letStmt, ok := s.(*tree.LetStatement)
+  if !ok {
+    t.Errorf("s not *tree.LetStatement. got=%T", s)
+  }
+
+  if letStmt.Name.Value != name {
+    t.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStmt.Name.Value)
+  }
+
 
   return true
 }
