@@ -29,6 +29,10 @@ func (p *Parser) peek() token.Token {
   return p.l.Tokens[p.position + 1]
 }
 
+func (p *Parser) peekFar(i int) token.Token {
+  return p.l.Tokens[p.position + i]
+}
+
 func (p *Parser) peekFor(t token.TokenType) bool {
   return p.peek().Type == t
 }
