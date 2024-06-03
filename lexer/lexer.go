@@ -198,8 +198,6 @@ func (l *Lexer) Process() {
       }
 		}
 
-    // when this happens after a processing of a number or letter, it will skip a character that needs to be read
-    // to be fixed
 		l.Advance()
 	}
 
