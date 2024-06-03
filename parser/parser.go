@@ -7,7 +7,25 @@ import (
 )
 
 type Parser struct {
-	l     *lexer.Lexer
-	token token.Token
+	l        *lexer.Lexer
+	token    token.Token
+	position int
 }
 
+// the lexer should have already tokenized the text
+func New(l *lexer.Lexer) *Parser {
+	p := &Parser{l: l}
+  p.position = 0
+  p.token = p.l.Tokens[p.position]
+	return p
+}
+
+func (p *Parser) nextToken() {
+  p.position += 1
+  p.token = p.l.Tokens[p.position]
+}
+
+
+func (p *Parser) ParseProgram() *tree.Program {
+  return nil
+}
