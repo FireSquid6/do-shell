@@ -209,7 +209,7 @@ func GetTestcases() []Testcase {
 	}
 
 	for _, expectation := range expectations {
-		file := path.Join("../testcases", expectation.Filename)
+		file := path.Join("./testcases", expectation.Filename)
 		text, err := os.ReadFile(file)
 
 		if err != nil {
