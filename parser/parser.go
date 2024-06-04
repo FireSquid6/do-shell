@@ -40,3 +40,4 @@ func (p *Parser) peekFor(t token.TokenType) bool {
 func (p *Parser) ParseProgram() *tree.Program {
   return nil
 }
+
