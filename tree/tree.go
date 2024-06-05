@@ -22,7 +22,7 @@ type Program struct {
 
 type Identifier struct {
 	Token token.Token
-	Value string
+	Value []rune
 }
 
 func (p *Program) TokenLiteral() []rune {
@@ -49,6 +49,14 @@ type FnStatement struct {
 }
 func (s *FnStatement) statementNode() {}
 func (s *FnStatement) TokenLiteral() []rune { return s.Token.Literal }
+
+
+type ReturnStatemnt struct {
+  Token      token.Token
+  ReturnValue Expression
+}
+func (rs *ReturnStatemnt) statementNode() {}
+func (rs *ReturnStatemnt) TokenLiteral() []rune { return rs.Token.Literal }
 
 type ExpressionStatement struct {
   Token      token.Token
@@ -79,6 +87,8 @@ type ElifStatement struct {
 }
 func (es *ElifStatement) statementNode() {}
 func (es *ElifStatement) TokenLiteral() []rune { return es.Token.Literal }
+
+// TODO: for and while statements
 
 type ElseStatement struct {
   Token token.Token

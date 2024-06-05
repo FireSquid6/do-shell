@@ -55,6 +55,7 @@ const (
 	IN
 	ELSE
 	IF
+  RETURN
 )
 
 func ReadableTokenName(t Token) string {
@@ -100,6 +101,7 @@ func LookupIdentifier(literal []rune) TokenType {
 		"else": ELSE,
 		"for":  FOR,
 		"in":   IN,
+    "return": RETURN,
 	}
 
 	if token, ok := tokenMap[string(literal)]; ok {
