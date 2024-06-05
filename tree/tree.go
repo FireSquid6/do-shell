@@ -4,6 +4,7 @@ import "github.com/firesquid6/do-shell/token"
 
 type Node interface {
 	TokenLiteral() []rune
+  String() string
 }
 
 type Statement interface {
@@ -18,6 +19,15 @@ type Expression interface {
 
 type Program struct {
 	Statements []Statement
+}
+func (p *Program) String() string {
+  var out string
+
+  for _, s := range p.Statements {
+    out += s.String()
+  }
+
+  return out
 }
 
 type Identifier struct {
@@ -40,30 +50,9 @@ type LetStatement struct {
 }
 func (ls *LetStatement) statementNode() {}
 func (ls *LetStatement) TokenLiteral() []rune { return ls.Token.Literal }
-
-type FnStatement struct {
-  Token      token.Token
-  Name       *Identifier
-  Parameters []*Identifier
-  Body       []*Statement
+func (ls *LetStatement) String() string {
+  return string(ls.TokenLiteral()) + " " + string(ls.Name.Value) + " = " + ls.Expression.String() + ";"
 }
-func (s *FnStatement) statementNode() {}
-func (s *FnStatement) TokenLiteral() []rune { return s.Token.Literal }
-
-
-type ReturnStatemnt struct {
-  Token      token.Token
-  ReturnValue Expression
-}
-func (rs *ReturnStatemnt) statementNode() {}
-func (rs *ReturnStatemnt) TokenLiteral() []rune { return rs.Token.Literal }
-
-type ExpressionStatement struct {
-  Token      token.Token
-  Expression Expression
-}
-func (s *ExpressionStatement) statementNode() {}
-func (s *ExpressionStatement) TokenLiteral() []rune { return s.Token.Literal }
 
 type ReturnStatement struct {
   Token      token.Token
@@ -71,32 +60,21 @@ type ReturnStatement struct {
 }
 func (rs *ReturnStatement) statementNode() {}
 func (rs *ReturnStatement) TokenLiteral() []rune { return rs.Token.Literal }
+func (rs *ReturnStatement) String() string {
+  return string(rs.TokenLiteral()) + " " + rs.ReturnValue.String() + ";"
+}
 
-type IfStatement struct {
-  Token       token.Token
+type ExpressionStatement struct {
+  Token      token.Token
   Expression Expression
-  Body []*Statement
 }
-func (is *IfStatement) statementNode() {}
-func (is *IfStatement) TokenLiteral() []rune { return is.Token.Literal }
-
-type ElifStatement struct {
-  Token       token.Token
-  Expression Expression
-  Body []*Statement
+func (s *ExpressionStatement) statementNode() {}
+func (s *ExpressionStatement) TokenLiteral() []rune { return s.Token.Literal }
+func (s *ExpressionStatement) String() string {
+  return s.Expression.String()
 }
-func (es *ElifStatement) statementNode() {}
-func (es *ElifStatement) TokenLiteral() []rune { return es.Token.Literal }
 
-// TODO: for and while statements
-
-type ElseStatement struct {
-  Token token.Token
-  Body []*Statement
-}
-func (es *ElseStatement) statementNode() {}
-func (es *ElseStatement) TokenLiteral() []rune { return es.Token.Literal }
-
+// TODO: if, for, while, else, elif statements
 
 
 
