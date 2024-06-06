@@ -53,14 +53,14 @@ func (i *Identifier) String() string       { return string(i.Value) }
 
 type PrefixExpression struct {
 	Token    token.Token
-	Operator string
+	Operator []rune
 	Right    Expression
 }
 
 func (pe *PrefixExpression) expressionNode()      {}
 func (pe *PrefixExpression) TokenLiteral() []rune { return pe.Token.Literal }
 func (pe *PrefixExpression) String() string {
-	return "(" + pe.Operator + pe.Right.String() + ")"
+	return "(" + string(pe.Operator) + pe.Right.String() + ")"
 }
 
 func (p *Program) TokenLiteral() []rune {

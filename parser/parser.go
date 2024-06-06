@@ -28,6 +28,7 @@ type Parser struct {
 	token    token.Token
 	position int
 	Tree     *tree.Program
+	Errors   []error
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
@@ -57,8 +58,21 @@ func New(tokens []token.Token) *Parser {
 
 	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
 	p.registerPrefix(token.NUMBER, p.parseNumberLiteral)
+  p.registerPrefix(token.NOT, p.parsePrefixExpression)
+  p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
 	return p
+}
+
+func (p *Parser) parsePrefixExpression() tree.Expression {
+  expression := &tree.PrefixExpression{
+    Token: p.token,
+    Operator: p.token.Literal,
+  }
+  p.nextToken()
+  expression.Right = p.parseExpression(PREFIX)
+
+  return expression
 }
 
 func (p *Parser) parseIdentifier() tree.Expression {
