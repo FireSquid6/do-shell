@@ -1,69 +1,37 @@
 package parser_test
 
 import (
-  "testing"
-  "reflect"
-  "github.com/firesquid6/do-shell/parser"
-  "github.com/firesquid6/do-shell/lexer"
-  "github.com/firesquid6/do-shell/tree"
+	"github.com/firesquid6/do-shell/parser"
+	"github.com/firesquid6/do-shell/tree"
+  "github.com/firesquid6/do-shell/token"
+	"reflect"
+	"testing"
 )
 
+func TestParser(t *testing.T) {
+	tests := []struct {
+		input       []token.Token
+		expectation *tree.Program
+    expectedErr []error
+	}{}
 
+  for _, tt := range tests {
+    p := parser.New(tt.input)
+    p.ParseProgram()
 
-func TestLetStatements(t *testing.T) {
-  input := `
-  let x = 5;
-  let y = 10;
-  let foobar = 838383;
-  `
-
-  l := lexer.Lexer{}
-  l.LexText(input)
-
-  p := parser.New(&l)
-
-  program := p.ParseProgram()
-
-  if program == nil {
-    t.Fatalf("ParseProgram() returned nil")
-  }
-
-  if len(program.Statements) != 3 {
-    t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
-  }
-
-  tests := []struct {expectedIdentifier string}{
-    {"x"},
-    {"y"},
-    {"foobar"},
-  }
-
-  for i, tt := range tests {
-    stmt := program.Statements[i]
-
-    if !testLetStatement(t, stmt, tt.expectedIdentifier) {
-      return
+    if len(p.Errors) != len(tt.expectedErr) {
+      t.Errorf("Expected %d errors, got %d", len(tt.expectedErr), len(p.Errors))
     }
-    
-  }
-}
 
+    for i, err := range p.Errors {
+      if err != tt.expectedErr[i] {
+        t.Errorf("Expected error %s, got %s", tt.expectedErr[i], err)
+      }
+    }
 
-func testLetStatement(t *testing.T, s tree.Statement, name string) bool {
-  if !reflect.DeepEqual(s.TokenLiteral(), []rune{'l', 'e', 't'}) {
-    t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
-    return false
-  }
-
-  letStmt, ok := s.(*tree.LetStatement)
-  if !ok {
-    t.Errorf("s not *tree.LetStatement. got=%T", s)
+    if !reflect.DeepEqual(p.Tree, tt.expectation) {
+      t.Errorf("Expected %s, got %s", tt.expectation, p.Tree)
+    }
   }
 
-  if letStmt.Name.Value != name {
-    t.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStmt.Name.Value)
-  }
-
-
-  return true
 }
