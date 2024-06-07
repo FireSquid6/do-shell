@@ -30,8 +30,18 @@ func TestParser(t *testing.T) {
     }
 
     if !reflect.DeepEqual(p.Tree, tt.expectation) {
+      t.Log("Expected:")
+      printProgram(tt.expectation, t)
+      t.Log("Got:")
+      printProgram(p.Tree, t)
+
       t.Errorf("Expected %s, got %s", tt.expectation, p.Tree)
     }
   }
 
+}
+
+
+func printProgram(program *tree.Program, t *testing.T) {
+  t.Log(program.String())
 }
