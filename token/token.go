@@ -56,6 +56,10 @@ const (
 	ELSE
 	IF
   RETURN
+
+  // booleans
+  TRUE
+  FALSE
 )
 
 func ReadableTokenName(t Token) string {
@@ -95,13 +99,15 @@ func ReadableTokenName(t Token) string {
 
 func LookupIdentifier(literal []rune) TokenType {
 	tokenMap := map[string]TokenType{
-		"let":  LET,
+    "let":  LET,
 		"fn":   FUNCTION,
 		"if":   IF,
 		"else": ELSE,
 		"for":  FOR,
 		"in":   IN,
     "return": RETURN,
+    "true": TRUE,
+    "false": FALSE,
 	}
 
 	if token, ok := tokenMap[string(literal)]; ok {
