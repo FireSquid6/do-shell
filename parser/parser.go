@@ -83,6 +83,10 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
+func (p *Parser) parseBoolean() tree.Expression {
+  return &tree.Boolean{Token: p.token, Value: p.token.Type == token.TRUE}
+}
+
 func (p *Parser) parseInfixExpression(left tree.Expression) tree.Expression {
   expression := &tree.InfixExpression{
     Token: p.token,
