@@ -17,6 +17,19 @@ type Expression interface {
 	expressionNode() // dummy method to help the compiler
 }
 
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator []rune
+	Right    Expression
+}
+
+func (ie *InfixExpression) expressionNode()      {}
+func (ie *InfixExpression) TokenLiteral() []rune { return ie.Token.Literal }
+func (ie *InfixExpression) String() string {
+	return "(" + ie.Left.String() + " " + string(ie.Operator) + " " + ie.Right.String() + ")"
+}
+
 type Program struct {
 	Statements []Statement
 }

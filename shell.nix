@@ -19,6 +19,7 @@ in
 pkgs.mkShell {
   packages = [
     goEnv
+    pkgs.delve
     gomod2nix
   ];
 }

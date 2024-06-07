@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"strconv"
+
 	"github.com/firesquid6/do-shell/token"
 	"github.com/firesquid6/do-shell/tree"
-	"strconv"
 )
 
 type (
@@ -23,6 +24,20 @@ const (
 	CALL
 )
 
+var precedences = map[token.TokenType]int{
+  token.EQUAL: EQUALS,
+  token.NOT_EQUAL: EQUALS,
+  token.LESS_THAN: LESSGREATER,
+  token.GREATER_THAN: LESSGREATER,
+  token.LESS_THAN_EQUAL: LESSGREATER,
+  token.GREATER_THAN_EQUAL: LESSGREATER,
+  token.PLUS: SUM,
+  token.MINUS: SUM,
+  token.MULTIPLY: PRODUCT,
+  token.DIVIDE: PRODUCT,
+}
+
+
 type Parser struct {
 	tokens   []token.Token
 	token    token.Token
@@ -34,20 +49,6 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
-	p.prefixParseFns[tokenType] = fn
-}
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
-	p.infixParseFns[tokenType] = fn
-}
-
-func Parse(tokens []token.Token) *tree.Program {
-	p := New(tokens)
-	return p.ParseProgram()
-
-}
-
-// the lexer should have already tokenized the text
 func New(tokens []token.Token) *Parser {
 	p := &Parser{tokens: tokens}
 	p.position = 0
@@ -58,21 +59,76 @@ func New(tokens []token.Token) *Parser {
 
 	p.registerPrefix(token.IDENTIFIER, p.parseIdentifier)
 	p.registerPrefix(token.NUMBER, p.parseNumberLiteral)
-  p.registerPrefix(token.NOT, p.parsePrefixExpression)
-  p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.NOT, p.parsePrefixExpression)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+
+  p.registerInfix(token.PLUS, p.parseInfixExpression)
+  p.registerInfix(token.MINUS, p.parseInfixExpression)
+  p.registerInfix(token.DIVIDE, p.parseInfixExpression)
+  p.registerInfix(token.MULTIPLY, p.parseInfixExpression)
+  p.registerInfix(token.EQUAL, p.parseInfixExpression)
+  p.registerInfix(token.NOT_EQUAL, p.parseInfixExpression)
+  p.registerInfix(token.LESS_THAN, p.parseInfixExpression)
+  p.registerInfix(token.LESS_THAN_EQUAL, p.parseInfixExpression)
+  p.registerInfix(token.GREATER_THAN, p.parseInfixExpression)
+  p.registerInfix(token.GREATER_THAN_EQUAL, p.parseInfixExpression)
 
 	return p
 }
 
-func (p *Parser) parsePrefixExpression() tree.Expression {
-  expression := &tree.PrefixExpression{
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
+}
+
+func (p *Parser) parseInfixExpression(left tree.Expression) tree.Expression {
+  expression := &tree.InfixExpression{
     Token: p.token,
     Operator: p.token.Literal,
+    Left: left,
   }
+
+  precedence := p.currentPrecedence()
   p.nextToken()
-  expression.Right = p.parseExpression(PREFIX)
+  expression.Right = p.parseExpression(precedence)
 
   return expression
+}
+
+func (p *Parser) peekPrecedence() int {
+  precedence, ok := precedences[p.peek().Type]
+  if !ok {
+    return LOWEST
+  }
+  return precedence
+}
+
+func (p *Parser) currentPrecedence() int {
+  precedence, ok := precedences[p.token.Type]
+  if !ok {
+    return LOWEST
+  }
+  return precedence
+}
+
+func Parse(tokens []token.Token) *tree.Program {
+	p := New(tokens)
+	return p.ParseProgram()
+
+}
+
+
+func (p *Parser) parsePrefixExpression() tree.Expression {
+	expression := &tree.PrefixExpression{
+		Token:    p.token,
+		Operator: p.token.Literal,
+	}
+	p.nextToken()
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
 }
 
 func (p *Parser) parseIdentifier() tree.Expression {
@@ -193,6 +249,16 @@ func (p *Parser) parseExpression(precedence int) tree.Expression {
 		return nil
 	}
 	leftExp := prefix()
+
+  for !p.peekFor(token.SEMICOLON) && precedence <p.peekPrecedence() {
+    infix := p.infixParseFns[p.peek().Type]
+    if infix == nil {
+      return leftExp
+    }
+
+    p.nextToken()
+    leftExp = infix(leftExp)
+  }
 
 	return leftExp
 }
