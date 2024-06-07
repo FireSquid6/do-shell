@@ -25,24 +25,23 @@ const (
 )
 
 var precedences = map[token.TokenType]int{
-  token.EQUAL: EQUALS,
-  token.NOT_EQUAL: EQUALS,
-  token.LESS_THAN: LESSGREATER,
-  token.GREATER_THAN: LESSGREATER,
-  token.LESS_THAN_EQUAL: LESSGREATER,
-  token.GREATER_THAN_EQUAL: LESSGREATER,
-  token.PLUS: SUM,
-  token.MINUS: SUM,
-  token.MULTIPLY: PRODUCT,
-  token.DIVIDE: PRODUCT,
+	token.EQUAL:              EQUALS,
+	token.NOT_EQUAL:          EQUALS,
+	token.LESS_THAN:          LESSGREATER,
+	token.GREATER_THAN:       LESSGREATER,
+	token.LESS_THAN_EQUAL:    LESSGREATER,
+	token.GREATER_THAN_EQUAL: LESSGREATER,
+	token.PLUS:               SUM,
+	token.MINUS:              SUM,
+	token.MULTIPLY:           PRODUCT,
+	token.DIVIDE:             PRODUCT,
 }
-
 
 type Parser struct {
 	tokens   []token.Token
 	token    token.Token
 	position int
-	Tree     *tree.Program
+	Program  *tree.Program
 	Errors   []error
 
 	prefixParseFns map[token.TokenType]prefixParseFn
@@ -52,7 +51,10 @@ type Parser struct {
 func New(tokens []token.Token) *Parser {
 	p := &Parser{tokens: tokens}
 	p.position = 0
-	p.token = p.tokens[p.position]
+
+  if len(p.tokens) > 0 {
+    p.token = p.tokens[p.position]
+  }
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -62,16 +64,16 @@ func New(tokens []token.Token) *Parser {
 	p.registerPrefix(token.NOT, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
-  p.registerInfix(token.PLUS, p.parseInfixExpression)
-  p.registerInfix(token.MINUS, p.parseInfixExpression)
-  p.registerInfix(token.DIVIDE, p.parseInfixExpression)
-  p.registerInfix(token.MULTIPLY, p.parseInfixExpression)
-  p.registerInfix(token.EQUAL, p.parseInfixExpression)
-  p.registerInfix(token.NOT_EQUAL, p.parseInfixExpression)
-  p.registerInfix(token.LESS_THAN, p.parseInfixExpression)
-  p.registerInfix(token.LESS_THAN_EQUAL, p.parseInfixExpression)
-  p.registerInfix(token.GREATER_THAN, p.parseInfixExpression)
-  p.registerInfix(token.GREATER_THAN_EQUAL, p.parseInfixExpression)
+	p.registerInfix(token.PLUS, p.parseInfixExpression)
+	p.registerInfix(token.MINUS, p.parseInfixExpression)
+	p.registerInfix(token.DIVIDE, p.parseInfixExpression)
+	p.registerInfix(token.MULTIPLY, p.parseInfixExpression)
+	p.registerInfix(token.EQUAL, p.parseInfixExpression)
+	p.registerInfix(token.NOT_EQUAL, p.parseInfixExpression)
+	p.registerInfix(token.LESS_THAN, p.parseInfixExpression)
+	p.registerInfix(token.LESS_THAN_EQUAL, p.parseInfixExpression)
+	p.registerInfix(token.GREATER_THAN, p.parseInfixExpression)
+	p.registerInfix(token.GREATER_THAN_EQUAL, p.parseInfixExpression)
 
 	return p
 }
@@ -84,59 +86,52 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 }
 
 func (p *Parser) parseGroupedExpression() tree.Expression {
-  p.nextToken()
+	p.nextToken()
 
-  expression := p.parseExpression(LOWEST)
+	expression := p.parseExpression(LOWEST)
 
-  if !p.peekFor(token.RPAREN) {
-    // TODO: throw a better error here
-    // this happens when an expression isn't closed properly
-    return nil
-  }
+	if !p.peekFor(token.RPAREN) {
+		// TODO: throw a better error here
+		// this happens when an expression isn't closed properly
+		return nil
+	}
 
-  return expression
+	return expression
 }
 
 func (p *Parser) parseBoolean() tree.Expression {
-  return &tree.Boolean{Token: p.token, Value: p.token.Type == token.TRUE}
+	return &tree.Boolean{Token: p.token, Value: p.token.Type == token.TRUE}
 }
 
 func (p *Parser) parseInfixExpression(left tree.Expression) tree.Expression {
-  expression := &tree.InfixExpression{
-    Token: p.token,
-    Operator: p.token.Literal,
-    Left: left,
-  }
+	expression := &tree.InfixExpression{
+		Token:    p.token,
+		Operator: p.token.Literal,
+		Left:     left,
+	}
 
-  precedence := p.currentPrecedence()
-  p.nextToken()
-  expression.Right = p.parseExpression(precedence)
+	precedence := p.currentPrecedence()
+	p.nextToken()
+	expression.Right = p.parseExpression(precedence)
 
-  return expression
+	return expression
 }
 
 func (p *Parser) peekPrecedence() int {
-  precedence, ok := precedences[p.peek().Type]
-  if !ok {
-    return LOWEST
-  }
-  return precedence
+	precedence, ok := precedences[p.peek().Type]
+	if !ok {
+		return LOWEST
+	}
+	return precedence
 }
 
 func (p *Parser) currentPrecedence() int {
-  precedence, ok := precedences[p.token.Type]
-  if !ok {
-    return LOWEST
-  }
-  return precedence
+	precedence, ok := precedences[p.token.Type]
+	if !ok {
+		return LOWEST
+	}
+	return precedence
 }
-
-func Parse(tokens []token.Token) *tree.Program {
-	p := New(tokens)
-	return p.ParseProgram()
-
-}
-
 
 func (p *Parser) parsePrefixExpression() tree.Expression {
 	expression := &tree.PrefixExpression{
@@ -168,6 +163,11 @@ func (p *Parser) parseNumberLiteral() tree.Expression {
 
 func (p *Parser) nextToken() {
 	p.position += 1
+
+  if p.position >= len(p.tokens) {
+    p.token = token.Token{Type: token.EOF, Literal: []rune("")}
+    return
+  }
 	p.token = p.tokens[p.position]
 }
 
@@ -184,6 +184,10 @@ func (p *Parser) peekFor(t token.TokenType) bool {
 }
 
 func (p *Parser) ParseProgram() *tree.Program {
+	if len(p.tokens) < 1 {
+		return &tree.Program{}
+	}
+
 	program := &tree.Program{}
 	statements := []tree.Statement{}
 
@@ -194,6 +198,7 @@ func (p *Parser) ParseProgram() *tree.Program {
 	}
 
 	program.Statements = statements
+	p.Program = program
 	return program
 }
 
@@ -268,15 +273,15 @@ func (p *Parser) parseExpression(precedence int) tree.Expression {
 	}
 	leftExp := prefix()
 
-  for !p.peekFor(token.SEMICOLON) && precedence <p.peekPrecedence() {
-    infix := p.infixParseFns[p.peek().Type]
-    if infix == nil {
-      return leftExp
-    }
+	for !p.peekFor(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infix := p.infixParseFns[p.peek().Type]
+		if infix == nil {
+			return leftExp
+		}
 
-    p.nextToken()
-    leftExp = infix(leftExp)
-  }
+		p.nextToken()
+		leftExp = infix(leftExp)
+	}
 
 	return leftExp
 }

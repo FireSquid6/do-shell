@@ -54,6 +54,7 @@ func (p *Program) String() string {
 	return out
 }
 
+// TODO: parse a float instaed of an int
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64

@@ -1,47 +1,76 @@
 package parser_test
 
 import (
-	"github.com/firesquid6/do-shell/parser"
-	"github.com/firesquid6/do-shell/tree"
-  "github.com/firesquid6/do-shell/token"
-	"reflect"
 	"testing"
+
+	"github.com/firesquid6/do-shell/parser"
+	"github.com/firesquid6/do-shell/token"
+	"github.com/firesquid6/do-shell/tree"
 )
 
 func TestParser(t *testing.T) {
 	tests := []struct {
 		input       []token.Token
 		expectation *tree.Program
-    expectedErr []error
-	}{}
+		expectedErr []error
+	}{
+		{
+			input: []token.Token{},
+			expectation: &tree.Program{
+				Statements: []tree.Statement{},
 
-  for _, tt := range tests {
-    p := parser.New(tt.input)
-    p.ParseProgram()
+			},
+			expectedErr: []error{},
+		},
+    {
+      input: []token.Token{
+        {Type: token.LET, Literal: []rune("let")},
+        {Type: token.IDENTIFIER, Literal: []rune("x")},
+        {Type: token.ASSIGN, Literal: []rune("=")},
+        {Type: token.NUMBER, Literal: []rune("5")},
+        {Type: token.SEMICOLON, Literal: []rune(";")},
+        {Type: token.EOF, Literal: []rune("")},
+      },
+      expectation: &tree.Program{
+        Statements: []tree.Statement{
+          &tree.LetStatement{
+            Token: token.Token{Type: token.LET, Literal: []rune("let")},
+            Name: &tree.Identifier{
+              Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")},
+              Value: []rune("x"),
+            },
+            Expression: &tree.IntegerLiteral{
+              Token: token.Token{Type: token.NUMBER, Literal: []rune("5")},
+              Value: 5,
+            },
+          },
+        },
+      },
 
-    if len(p.Errors) != len(tt.expectedErr) {
-      t.Errorf("Expected %d errors, got %d", len(tt.expectedErr), len(p.Errors))
+    },
+	}
+
+	for _, tt := range tests {
+		p := parser.New(tt.input)
+    program := p.ParseProgram()
+
+		if len(p.Errors) != len(tt.expectedErr) {
+			t.Errorf("Expected %d errors, got %d", len(tt.expectedErr), len(p.Errors))
+		}
+
+		for i, err := range p.Errors {
+			if err != tt.expectedErr[i] {
+				t.Errorf("Expected error %s, got %s", tt.expectedErr[i], err)
+			}
+		}
+
+
+    programString := program.String()
+    expectedProgramString := tt.expectation.String()
+
+    if programString != expectedProgramString {
+      t.Errorf("Expected program string to be %s, got %s", expectedProgramString, programString)
     }
-
-    for i, err := range p.Errors {
-      if err != tt.expectedErr[i] {
-        t.Errorf("Expected error %s, got %s", tt.expectedErr[i], err)
-      }
-    }
-
-    if !reflect.DeepEqual(p.Tree, tt.expectation) {
-      t.Log("Expected:")
-      printProgram(tt.expectation, t)
-      t.Log("Got:")
-      printProgram(p.Tree, t)
-
-      t.Errorf("Expected %s, got %s", tt.expectation, p.Tree)
-    }
-  }
-
+	}
 }
 
-
-func printProgram(program *tree.Program, t *testing.T) {
-  t.Log(program.String())
-}
