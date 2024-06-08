@@ -87,18 +87,22 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
-func (p *Parser) parseGroupedExpression() tree.Expression {
+func (p *Parser) parseGroupedExpression() (tree.Expression, error) {
 	p.nextToken()
 
-	expression := p.parseExpression(LOWEST)
+	expression, err := p.parseExpression(LOWEST)
+  if err != nil {
+    return nil, err
+  }
 
 	if !p.peekFor(token.RPAREN) {
 		// TODO: throw a better error here
 		// this happens when an expression isn't closed properly
-		return nil
+    return nil, errors.New("Expression was not closed properly")
+    
 	}
 
-	return expression
+	return expression, nil
 }
 
 func (p *Parser) parseBoolean() tree.Expression {
