@@ -1,9 +1,7 @@
 package tree
 
 import (
-	"fmt"
 	"strings"
-
 	"github.com/firesquid6/do-shell/token"
 )
 

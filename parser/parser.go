@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/firesquid6/do-shell/token"
@@ -253,35 +255,40 @@ func (p *Parser) parseReturnStatement() *tree.ReturnStatement {
 	return statement
 }
 
-func (p *Parser) parseExpressionStatement() *tree.ExpressionStatement {
+func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {
 	statement := &tree.ExpressionStatement{Token: p.token}
 
-	statement.Expression = p.parseExpression(LOWEST)
+  exp, err := p.parseExpression(LOWEST)
+  statement.Expression = exp
+
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing expression statement: "), err)
+  }
 
 	if p.peekFor(token.SEMICOLON) {
 		p.nextToken()
 	}
 
-	return nil
+	return statement, nil
 }
 
-func (p *Parser) parseExpression(precedence int) tree.Expression {
+func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 	prefix := p.prefixParseFns[p.token.Type]
 	if prefix == nil {
 		// TODO: throw an error
-		return nil
+		return nil, errors.New(fmt.Sprintf("Failed to find a prefix parse function for %s", token.ReadableTokenName(p.token)))
 	}
 	leftExp := prefix()
 
 	for !p.peekFor(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peek().Type]
 		if infix == nil {
-			return leftExp
+			return leftExp, nil
 		}
 
 		p.nextToken()
 		leftExp = infix(leftExp)
 	}
 
-	return leftExp
+	return leftExp, nil
 }
