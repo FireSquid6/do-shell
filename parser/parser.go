@@ -302,7 +302,11 @@ func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 	if prefix == nil {
 		return nil, errors.New(fmt.Sprintf("Failed to find a prefix parse function for %s", token.ReadableTokenName(p.token)))
 	}
-	leftExp := prefix()
+	leftExp, err := prefix()
+
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing expression:"), err)
+  }
 
 	for !p.peekFor(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peek().Type]
@@ -311,7 +315,11 @@ func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 		}
 
 		p.nextToken()
-		leftExp = infix(leftExp)
+		leftExp, err = infix(leftExp)
+
+    if err != nil {
+      return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
+    }
 	}
 
 	return leftExp, nil
