@@ -10,8 +10,8 @@ import (
 )
 
 type (
-	prefixParseFn func() tree.Expression
-	infixParseFn  func(tree.Expression) tree.Expression
+	prefixParseFn func() (tree.Expression, error)
+	infixParseFn  func(tree.Expression) (tree.Expression, error)
 )
 
 // order of operations
@@ -96,7 +96,6 @@ func (p *Parser) parseGroupedExpression() (tree.Expression, error) {
   }
 
 	if !p.peekFor(token.RPAREN) {
-		// TODO: throw a better error here
 		// this happens when an expression isn't closed properly
     return nil, errors.New("Expression was not closed properly")
     
@@ -162,8 +161,8 @@ func (p *Parser) parsePrefixExpression() (tree.Expression, error) {
 	return expression, nil
 }
 
-func (p *Parser) parseIdentifier() tree.Expression {
-	return &tree.Identifier{Token: p.token, Value: p.token.Literal}
+func (p *Parser) parseIdentifier() (tree.Expression, error) {
+	return &tree.Identifier{Token: p.token, Value: p.token.Literal}, nil
 }
 
 func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
@@ -172,7 +171,6 @@ func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
 	value, err := strconv.ParseInt(string(p.token.Literal), 0, 64)
 
 	if err != nil {
-		// todo: handle this error
     return nil, errors.Join(errors.New("Error parsing number literal:"), err) 
 	}
 
@@ -211,9 +209,15 @@ func (p *Parser) ParseProgram() *tree.Program {
 	statements := []tree.Statement{}
 
 	for p.token.Type != token.EOF {
-		statement := p.parseStatement()
+		statement, err := p.parseStatement()
+    if err != nil {
+      p.Errors = append(p.Errors, err)
+    }
+    if statement != nil {
+      statements = append(statements, statement)
+    }
+
 		p.nextToken()
-		statements = append(statements, statement)
 	}
 
 	program.Statements = statements
@@ -221,22 +225,26 @@ func (p *Parser) ParseProgram() *tree.Program {
 	return program
 }
 
-func (p *Parser) parseStatement() tree.Statement {
+func (p *Parser) parseStatement() (tree.Statement, error) {
+  var statement tree.Statement
+  var err error
+
 	switch p.token.Type {
 	case token.LET:
-		return p.parseLetStatement()
+    statement, err = p.parseLetStatement()
 	case token.RETURN:
-		return p.parseReturnStatement()
+		statement = p.parseReturnStatement()
 	default:
-		return p.parseExpressionStatement()
+		statement, err = p.parseExpressionStatement()
 	}
+
+  return statement, err
 }
 
 func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	statement := &tree.LetStatement{Token: p.token}
 
 	if !p.peekFor(token.IDENTIFIER) {
-		// TODO: handle these errors
     return nil, errors.New("let statement is not followed by identifier")
 	}
 	p.nextToken()
@@ -244,7 +252,6 @@ func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	statement.Name = &tree.Identifier{Token: p.token, Value: p.token.Literal}
 
 	if !p.peekFor(token.ASSIGN) {
-		// TODO: make an error handler
 		return nil, errors.New("identifier in let statement is not followed by assignment")
 	}
 	p.nextToken()
@@ -293,7 +300,6 @@ func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {
 func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 	prefix := p.prefixParseFns[p.token.Type]
 	if prefix == nil {
-		// TODO: throw an error
 		return nil, errors.New(fmt.Sprintf("Failed to find a prefix parse function for %s", token.ReadableTokenName(p.token)))
 	}
 	leftExp := prefix()
