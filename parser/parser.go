@@ -109,7 +109,7 @@ func (p *Parser) parseBoolean() tree.Expression {
 	return &tree.Boolean{Token: p.token, Value: p.token.Type == token.TRUE}
 }
 
-func (p *Parser) parseInfixExpression(left tree.Expression) tree.Expression {
+func (p *Parser) parseInfixExpression(left tree.Expression) (tree.Expression, error) {
 	expression := &tree.InfixExpression{
 		Token:    p.token,
 		Operator: p.token.Literal,
@@ -118,9 +118,15 @@ func (p *Parser) parseInfixExpression(left tree.Expression) tree.Expression {
 
 	precedence := p.currentPrecedence()
 	p.nextToken()
-	expression.Right = p.parseExpression(precedence)
+  exp, err := p.parseExpression(precedence)
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
+  }
 
-	return expression
+
+  expression.Right = exp
+
+	return expression, nil
 }
 
 func (p *Parser) peekPrecedence() int {
@@ -139,32 +145,39 @@ func (p *Parser) currentPrecedence() int {
 	return precedence
 }
 
-func (p *Parser) parsePrefixExpression() tree.Expression {
+func (p *Parser) parsePrefixExpression() (tree.Expression, error) {
 	expression := &tree.PrefixExpression{
 		Token:    p.token,
 		Operator: p.token.Literal,
 	}
 	p.nextToken()
-	expression.Right = p.parseExpression(PREFIX)
+  exp, err := p.parseExpression(PREFIX)
 
-	return expression
+  if err != nil {
+    return nil, errors.Join(errors.New("error parsing prefix expression"), err)
+
+  }
+  expression.Right = exp
+
+	return expression, nil
 }
 
 func (p *Parser) parseIdentifier() tree.Expression {
 	return &tree.Identifier{Token: p.token, Value: p.token.Literal}
 }
 
-func (p *Parser) parseNumberLiteral() tree.Expression {
+func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
 	// TODO: handle it being a float and not an integer
 	literal := &tree.IntegerLiteral{Token: p.token}
 	value, err := strconv.ParseInt(string(p.token.Literal), 0, 64)
 
 	if err != nil {
 		// todo: handle this error
+    return nil, errors.Join(errors.New("Error parsing number literal:"), err) 
 	}
 
 	literal.Value = value
-	return literal
+	return literal, nil
 }
 
 func (p *Parser) nextToken() {
@@ -219,12 +232,12 @@ func (p *Parser) parseStatement() tree.Statement {
 	}
 }
 
-func (p *Parser) parseLetStatement() *tree.LetStatement {
+func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	statement := &tree.LetStatement{Token: p.token}
 
 	if !p.peekFor(token.IDENTIFIER) {
 		// TODO: handle these errors
-		return nil
+    return nil, errors.New("let statement is not followed by identifier")
 	}
 	p.nextToken()
 
@@ -232,17 +245,17 @@ func (p *Parser) parseLetStatement() *tree.LetStatement {
 
 	if !p.peekFor(token.ASSIGN) {
 		// TODO: make an error handler
-		return nil
+		return nil, errors.New("identifier in let statement is not followed by assignment")
 	}
 	p.nextToken()
 
 	// TODO: parse the expression
-	// TODO: handle hitting EOF
+
 	for p.token.Type != token.SEMICOLON {
 		p.nextToken()
 	}
 
-	return statement
+	return statement, nil
 }
 
 func (p *Parser) parseReturnStatement() *tree.ReturnStatement {
@@ -250,7 +263,8 @@ func (p *Parser) parseReturnStatement() *tree.ReturnStatement {
 
 	p.nextToken()
 
-	// again, we're skipping the expression for now
+  // TODO: parse expression
+
 	// it will need to be parsed correctly
 	for p.token.Type != token.SEMICOLON {
 		p.nextToken()
