@@ -1,6 +1,11 @@
 package tree
 
-import "github.com/firesquid6/do-shell/token"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/firesquid6/do-shell/token"
+)
 
 type Node interface {
 	TokenLiteral() []rune
@@ -25,13 +30,14 @@ type InfixExpression struct {
 }
 
 type Boolean struct {
-  Token token.Token
-  Value bool
+	Token token.Token
+	Value bool
 }
+
 func (b *Boolean) expressionNode()      {}
 func (b *Boolean) TokenLiteral() []rune { return b.Token.Literal }
 func (b *Boolean) String() string {
-  return string(b.Token.Literal)
+	return string(b.Token.Literal)
 }
 
 func (ie *InfixExpression) expressionNode()      {}
@@ -45,13 +51,13 @@ type Program struct {
 }
 
 func (p *Program) String() string {
-	var out string
+  builder := strings.Builder{}
 
-	for _, s := range p.Statements {
-		out += s.String()
-	}
+  for _, s := range p.Statements {
+    _, _ = builder.WriteString(s.String())
+  }
 
-	return out
+  return builder.String()
 }
 
 // TODO: parse a float instaed of an int
@@ -104,7 +110,14 @@ type LetStatement struct {
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() []rune { return ls.Token.Literal }
 func (ls *LetStatement) String() string {
-	return string(ls.TokenLiteral()) + " " + string(ls.Name.Value) + " = " + ls.Expression.String() + ";"
+  builder := strings.Builder{}
+  builder.WriteString(string(ls.TokenLiteral()))
+  builder.WriteString(" ")
+  builder.WriteString(string(ls.Name.Value))
+  builder.WriteString(" = ")
+  builder.WriteString(ls.Expression.String())
+  builder.WriteString(";")
+  return builder.String()
 }
 
 type ReturnStatement struct {
