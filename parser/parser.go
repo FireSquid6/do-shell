@@ -170,7 +170,7 @@ func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
   fmt.Println("parsing number literal")
 	// TODO: handle it being a float and not an integer
 	literal := &tree.NumberLiteral{Token: p.token}
-	value, err := strconv.ParseInt(string(p.token.Literal), 0, 64)
+	value, err := strconv.ParseFloat(string(p.token.Literal), 64)
   fmt.Println(value)
 
 	if err != nil {
@@ -236,7 +236,7 @@ func (p *Parser) parseStatement() (tree.Statement, error) {
 	case token.LET:
     statement, err = p.parseLetStatement()
 	case token.RETURN:
-		statement = p.parseReturnStatement()
+		statement, err = p.parseReturnStatement()
 	default:
 		statement, err = p.parseExpressionStatement()
 	}
@@ -278,20 +278,25 @@ func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	return statement, nil
 }
 
-func (p *Parser) parseReturnStatement() *tree.ReturnStatement {
+func (p *Parser) parseReturnStatement() (*tree.ReturnStatement, error) {
 	statement := &tree.ReturnStatement{Token: p.token}
 
 	p.nextToken()
 
   // TODO: parse expression
-  p.parseExpression(LOWEST)
+  expression, err := p.parseExpression(LOWEST)
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing expression in return statement:"), err)
+  }
+
+  statement.Expression = expression
 
 	// it will need to be parsed correctly
 	for p.token.Type != token.SEMICOLON {
 		p.nextToken()
 	}
 
-	return statement
+	return statement, nil
 }
 
 func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {

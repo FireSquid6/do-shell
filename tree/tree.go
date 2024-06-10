@@ -1,8 +1,8 @@
 package tree
 
 import (
-	"strings"
 	"github.com/firesquid6/do-shell/token"
+	"strings"
 )
 
 type Node interface {
@@ -49,19 +49,19 @@ type Program struct {
 }
 
 func (p *Program) String() string {
-  builder := strings.Builder{}
+	builder := strings.Builder{}
 
-  for _, s := range p.Statements {
-    _, _ = builder.WriteString(s.String())
-  }
+	for _, s := range p.Statements {
+		_, _ = builder.WriteString(s.String())
+	}
 
-  return builder.String()
+	return builder.String()
 }
 
 // TODO: parse a float instaed of an int
 type NumberLiteral struct {
 	Token token.Token
-	Value int64
+	Value float64
 }
 
 func (il *NumberLiteral) expressionNode()      {}
@@ -108,25 +108,25 @@ type LetStatement struct {
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() []rune { return ls.Token.Literal }
 func (ls *LetStatement) String() string {
-  builder := strings.Builder{}
-  builder.WriteString(string(ls.TokenLiteral()))
-  builder.WriteString(" ")
-  builder.WriteString(string(ls.Name.Value))
-  builder.WriteString(" = ")
-  builder.WriteString(ls.Expression.String())
-  builder.WriteString(";")
-  return builder.String()
+	builder := strings.Builder{}
+	builder.WriteString(string(ls.TokenLiteral()))
+	builder.WriteString(" ")
+	builder.WriteString(string(ls.Name.Value))
+	builder.WriteString(" = ")
+	builder.WriteString(ls.Expression.String())
+	builder.WriteString(";")
+	return builder.String()
 }
 
 type ReturnStatement struct {
-	Token       token.Token
-	ReturnValue Expression
+	Token      token.Token
+	Expression Expression
 }
 
 func (rs *ReturnStatement) statementNode()       {}
 func (rs *ReturnStatement) TokenLiteral() []rune { return rs.Token.Literal }
 func (rs *ReturnStatement) String() string {
-	return string(rs.TokenLiteral()) + " " + rs.ReturnValue.String() + ";"
+	return string(rs.TokenLiteral()) + " " + rs.Expression.String() + ";"
 }
 
 type ExpressionStatement struct {
@@ -139,5 +139,31 @@ func (s *ExpressionStatement) TokenLiteral() []rune { return s.Token.Literal }
 func (s *ExpressionStatement) String() string {
 	return s.Expression.String()
 }
+
+type FunctionLiteral struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Statements []Statement
+}
+
+func (fl *FunctionLiteral) expressionNode() {}
+func (fl *FunctionLiteral) String() string {
+	builder := strings.Builder{}
+	builder.WriteString(string(fl.TokenLiteral()))
+	builder.WriteString("(")
+	for i, p := range fl.Parameters {
+		builder.WriteString(string(p.Value))
+		if i < len(fl.Parameters)-1 {
+			builder.WriteString(", ")
+		}
+	}
+	builder.WriteString(") {\n")
+	for _, s := range fl.Statements {
+		builder.WriteString(s.String())
+	}
+	builder.WriteString("}")
+	return builder.String()
+}
+func (fl *FunctionLiteral) TokenLiteral() []rune { return fl.Token.Literal }
 
 // TODO: if, for, while, else, elif statements
