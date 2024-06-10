@@ -129,6 +129,27 @@ func (rs *ReturnStatement) String() string {
 	return string(rs.TokenLiteral()) + " " + rs.Expression.String() + ";"
 }
 
+type CallExpression struct {
+  Token     token.Token
+  Function  Expression
+  Arguments []Expression
+}
+func (ce *CallExpression) expressionNode()      {}
+func (ce *CallExpression) TokenLiteral() []rune { return ce.Token.Literal }
+func (ce *CallExpression) String() string {
+  builder := strings.Builder{}
+  builder.WriteString(ce.Function.String())
+  builder.WriteString("(")
+  for i, arg := range ce.Arguments {
+    builder.WriteString(arg.String())
+    if i < len(ce.Arguments)-1 {
+      builder.WriteString(", ")
+    }
+  }
+  builder.WriteString(")")
+  return builder.String()
+}
+
 type ExpressionStatement struct {
 	Token      token.Token
 	Expression Expression

@@ -92,9 +92,6 @@ func TestParser(t *testing.T) {
 				{Type: token.IDENTIFIER, Literal: []rune("y")},
 				{Type: token.SEMICOLON, Literal: []rune(";")},
 				{Type: token.RBRACE, Literal: []rune("}")},
-				{Type: token.LET, Literal: []rune("let")},
-				{Type: token.IDENTIFIER, Literal: []rune("result")},
-				{Type: token.ASSIGN, Literal: []rune("=")},
 				{Type: token.IDENTIFIER, Literal: []rune("add")},
 				{Type: token.LPAREN, Literal: []rune("(")},
 				{Type: token.IDENTIFIER, Literal: []rune("five")},
@@ -160,6 +157,26 @@ func TestParser(t *testing.T) {
 							},
 						},
 					},
+          &tree.ExpressionStatement{
+            Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
+            Expression: &tree.CallExpression{
+              Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
+              Function: &tree.Identifier{
+                Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
+                Value: []rune("add"),
+              },
+              Arguments: []tree.Expression{
+                &tree.Identifier{
+                  Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("five")},
+                  Value: []rune("five"),
+                },
+                &tree.Identifier{
+                  Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("ten")},
+                  Value: []rune("ten"),
+                },
+              },
+            },
+          },
 				},
 			},
 		},
