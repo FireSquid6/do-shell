@@ -7,6 +7,7 @@ import (
 
 	"github.com/firesquid6/do-shell/token"
 	"github.com/firesquid6/do-shell/tree"
+  // "github.com/firesquid6/do-shell/option"
 )
 
 type (
@@ -166,9 +167,11 @@ func (p *Parser) parseIdentifier() (tree.Expression, error) {
 }
 
 func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
+  fmt.Println("parsing number literal")
 	// TODO: handle it being a float and not an integer
 	literal := &tree.IntegerLiteral{Token: p.token}
 	value, err := strconv.ParseInt(string(p.token.Literal), 0, 64)
+  fmt.Println(value)
 
 	if err != nil {
     return nil, errors.Join(errors.New("Error parsing number literal:"), err) 
@@ -242,6 +245,7 @@ func (p *Parser) parseStatement() (tree.Statement, error) {
 }
 
 func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
+
 	statement := &tree.LetStatement{Token: p.token}
 
 	if !p.peekFor(token.IDENTIFIER) {
@@ -256,11 +260,20 @@ func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	}
 	p.nextToken()
 
-	// TODO: parse the expression
+  // we have to call nextToken twice to make sure we aren't looking at the assignment token
+  // this smells like bad programming
+  p.nextToken()
+  expression, err := p.parseExpression(LOWEST)
+
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing expression in let statement:"), err)
+  }
+  statement.Expression = expression
 
 	for p.token.Type != token.SEMICOLON {
 		p.nextToken()
 	}
+  // if there's errors it also could be here that I need to call nextToken
 
 	return statement, nil
 }
@@ -271,6 +284,7 @@ func (p *Parser) parseReturnStatement() *tree.ReturnStatement {
 	p.nextToken()
 
   // TODO: parse expression
+  p.parseExpression(LOWEST)
 
 	// it will need to be parsed correctly
 	for p.token.Type != token.SEMICOLON {
@@ -298,8 +312,9 @@ func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {
 }
 
 func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
-	prefix := p.prefixParseFns[p.token.Type]
-	if prefix == nil {
+  fmt.Println(token.ReadableTokenName(p.token))
+	prefix, ok := p.prefixParseFns[p.token.Type]
+	if !ok {
 		return nil, errors.New(fmt.Sprintf("Failed to find a prefix parse function for %s", token.ReadableTokenName(p.token)))
 	}
 	leftExp, err := prefix()
@@ -321,6 +336,9 @@ func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
       return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
     }
 	}
+
+  // note to future me: this is probably where the issue is
+  // you're not going to the next token and are left looking at the token right before the semicolon
 
 	return leftExp, nil
 }
