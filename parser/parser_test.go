@@ -211,11 +211,3 @@ func TestParser(t *testing.T) {
 		}
 	}
 }
-
-func failTest(t *testing.T, p *parser.Parser) {
-	t.Logf("Parser errors: %v", p.Errors)
-	for _, err := range p.Errors {
-		t.Errorf("Parser error: %s", err)
-	}
-	t.Errorf("You suck. Be better.")
-}

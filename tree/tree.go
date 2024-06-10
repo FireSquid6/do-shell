@@ -161,10 +161,24 @@ func (s *ExpressionStatement) String() string {
 	return s.Expression.String()
 }
 
+type BlockStatement struct {
+  Token token.Token
+  Statements []Statement
+}
+func (bs *BlockStatement) statementNode() {}
+func (bs *BlockStatement) TokenLiteral() []rune { return bs.Token.Literal }
+func (bs *BlockStatement) String() string {
+  builder := strings.Builder{}
+  for _, s := range bs.Statements {
+    builder.WriteString(s.String())
+  }
+  return builder.String()
+}
+
 type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
-	Statements []Statement
+  Statements *BlockStatement
 }
 
 func (fl *FunctionLiteral) expressionNode() {}
@@ -179,9 +193,7 @@ func (fl *FunctionLiteral) String() string {
 		}
 	}
 	builder.WriteString(") {\n")
-	for _, s := range fl.Statements {
-		builder.WriteString(s.String())
-	}
+  builder.WriteString(fl.Statements.String())
 	builder.WriteString("}")
 	return builder.String()
 }

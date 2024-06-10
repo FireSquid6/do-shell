@@ -81,6 +81,28 @@ func New(tokens []token.Token) *Parser {
 	return p
 }
 
+func (p *Parser) parseFunctionLiteral() (tree.Expression, error) {
+  literal := &tree.FunctionLiteral{Token: p.token}
+
+  if !p.peekFor(token.LPAREN) {
+    return nil, errors.New("Function literal is not followed by a left parenthesis")
+  }
+  p.nextToken()
+
+  params, err := p.parseFunctionParameters()
+
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing function parameters:"), err)
+  }
+  literal.Parameters = params
+
+  return literal, nil
+}
+
+func (p *Parser) parseFunctionParameters() ([]*tree.Identifier, error) {
+  return []*tree.Identifier{}, nil
+}
+
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
 	p.prefixParseFns[tokenType] = fn
 }
