@@ -66,6 +66,11 @@ func New(tokens []token.Token) *Parser {
 	p.registerPrefix(token.NUMBER, p.parseNumberLiteral)
 	p.registerPrefix(token.NOT, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+  // p.registerPrefix(token.TRUE, p.parseBoolean)
+  // p.registerPrefix(token.FALSE, p.parseBoolean)
+
+  p.registerPrefix(token.IF, p.parseIfExpression)
+  p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -79,6 +84,56 @@ func New(tokens []token.Token) *Parser {
 	p.registerInfix(token.GREATER_THAN_EQUAL, p.parseInfixExpression)
 
 	return p
+}
+
+func (p *Parser) parseIfExpression() (tree.Expression, error) {
+  expression := &tree.IfExpression{Token: p.token}
+
+  if !p.peekFor(token.LPAREN) {
+    return nil, errors.New("If statement is not followed by a left parenthesis")
+  }
+
+  p.nextToken()
+  p.nextToken()
+
+  cond, err := p.parseExpression(LOWEST)
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing condition in if statement:"), err)
+  }
+
+  expression.Condition = cond
+
+  if !p.peekFor(token.LBRACE) {
+    return nil, errors.New("If statement condition is not followed by a block statement")
+  }
+  p.nextToken()
+  p.nextToken()
+
+  consequence, err := p.parseBlockStatement()
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing consequence in if statement:"), err)
+  }
+  expression.Consequence = consequence
+
+  return expression, nil
+}
+
+func (p *Parser) parseBlockStatement() (*tree.BlockStatement, error) {
+  block := &tree.BlockStatement{Token: p.token}
+  block.Statements = []tree.Statement{}
+  
+  for p.token.Type != token.RBRACE && p.token.Type != token.EOF {
+    statement, err := p.parseStatement()
+
+    if err != nil {
+      return nil, errors.Join(errors.New("Error parsing statement in block statement:"), err)
+    }
+    block.Statements = append(block.Statements, statement)
+  }
+
+  // TODO: support else and elif statements
+
+  return block, nil
 }
 
 func (p *Parser) parseFunctionLiteral() (tree.Expression, error) {
@@ -96,6 +151,18 @@ func (p *Parser) parseFunctionLiteral() (tree.Expression, error) {
   }
   literal.Parameters = params
 
+  if !p.peekFor(token.LBRACE) {
+    return nil, errors.New("Function literal parameters are not followed by a block statement")
+  }
+  p.nextToken()
+  p.nextToken()
+
+  statements, err := p.parseBlockStatement()
+  if err != nil {
+    return nil, errors.Join(errors.New("Error parsing statements in function literal:"), err)
+  }
+
+  literal.Statements = statements
   return literal, nil
 }
 

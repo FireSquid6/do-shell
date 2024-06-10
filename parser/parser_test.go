@@ -138,45 +138,48 @@ func TestParser(t *testing.T) {
 								{Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")}, Value: []rune("x")},
 								{Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("y")}, Value: []rune("y")},
 							},
-							Statements: []tree.Statement{
-								&tree.ExpressionStatement{
-									Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")},
-									Expression: &tree.InfixExpression{
-										Token:    token.Token{Type: token.PLUS, Literal: []rune("+")},
-										Operator: []rune("+"),
-										Left: &tree.Identifier{
-											Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")},
-											Value: []rune("x"),
-										},
-										Right: &tree.Identifier{
-											Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("y")},
-											Value: []rune("y"),
+							Statements: &tree.BlockStatement{
+								Token: token.Token{Type: token.LBRACE, Literal: []rune("{")},
+								Statements: []tree.Statement{
+									&tree.ExpressionStatement{
+										Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")},
+										Expression: &tree.InfixExpression{
+											Token:    token.Token{Type: token.PLUS, Literal: []rune("+")},
+											Operator: []rune("+"),
+											Left: &tree.Identifier{
+												Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")},
+												Value: []rune("x"),
+											},
+											Right: &tree.Identifier{
+												Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("y")},
+												Value: []rune("y"),
+											},
 										},
 									},
 								},
 							},
 						},
 					},
-          &tree.ExpressionStatement{
-            Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
-            Expression: &tree.CallExpression{
-              Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
-              Function: &tree.Identifier{
-                Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
-                Value: []rune("add"),
-              },
-              Arguments: []tree.Expression{
-                &tree.Identifier{
-                  Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("five")},
-                  Value: []rune("five"),
-                },
-                &tree.Identifier{
-                  Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("ten")},
-                  Value: []rune("ten"),
-                },
-              },
-            },
-          },
+					&tree.ExpressionStatement{
+						Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
+						Expression: &tree.CallExpression{
+							Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
+							Function: &tree.Identifier{
+								Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
+								Value: []rune("add"),
+							},
+							Arguments: []tree.Expression{
+								&tree.Identifier{
+									Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("five")},
+									Value: []rune("five"),
+								},
+								&tree.Identifier{
+									Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("ten")},
+									Value: []rune("ten"),
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -194,6 +197,10 @@ func TestParser(t *testing.T) {
 		program := p.ParseProgram()
 
 		if len(p.Errors) != len(tt.expectedErr) {
+      // print all of the errors
+      for _, err := range p.Errors {
+        t.Log(err)
+      }
 			t.Errorf("Expected %d errors, got %d", len(tt.expectedErr), len(p.Errors))
 		}
 

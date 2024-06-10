@@ -130,24 +130,25 @@ func (rs *ReturnStatement) String() string {
 }
 
 type CallExpression struct {
-  Token     token.Token
-  Function  Expression
-  Arguments []Expression
+	Token     token.Token
+	Function  Expression
+	Arguments []Expression
 }
+
 func (ce *CallExpression) expressionNode()      {}
 func (ce *CallExpression) TokenLiteral() []rune { return ce.Token.Literal }
 func (ce *CallExpression) String() string {
-  builder := strings.Builder{}
-  builder.WriteString(ce.Function.String())
-  builder.WriteString("(")
-  for i, arg := range ce.Arguments {
-    builder.WriteString(arg.String())
-    if i < len(ce.Arguments)-1 {
-      builder.WriteString(", ")
-    }
-  }
-  builder.WriteString(")")
-  return builder.String()
+	builder := strings.Builder{}
+	builder.WriteString(ce.Function.String())
+	builder.WriteString("(")
+	for i, arg := range ce.Arguments {
+		builder.WriteString(arg.String())
+		if i < len(ce.Arguments)-1 {
+			builder.WriteString(", ")
+		}
+	}
+	builder.WriteString(")")
+	return builder.String()
 }
 
 type ExpressionStatement struct {
@@ -162,15 +163,38 @@ func (s *ExpressionStatement) String() string {
 }
 
 type BlockStatement struct {
-  Token token.Token
-  Statements []Statement
+	Token      token.Token
+	Statements []Statement
 }
-func (bs *BlockStatement) statementNode() {}
+
+func (bs *BlockStatement) statementNode()       {}
 func (bs *BlockStatement) TokenLiteral() []rune { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
+	builder := strings.Builder{}
+	for _, s := range bs.Statements {
+		builder.WriteString(s.String())
+	}
+	return builder.String()
+}
+
+type IfExpression struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (ie *IfExpression) expressionNode()      {}
+func (ie *IfExpression) TokenLiteral() []rune { return ie.Token.Literal }
+func (ie *IfExpression) String() string {
   builder := strings.Builder{}
-  for _, s := range bs.Statements {
-    builder.WriteString(s.String())
+  builder.WriteString("if ")
+  builder.WriteString(ie.Condition.String())
+  builder.WriteString(" ")
+  builder.WriteString(ie.Consequence.String())
+  if ie.Alternative != nil {
+    builder.WriteString(" else ")
+    builder.WriteString(ie.Alternative.String())
   }
   return builder.String()
 }
@@ -178,7 +202,7 @@ func (bs *BlockStatement) String() string {
 type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
-  Statements *BlockStatement
+	Statements *BlockStatement
 }
 
 func (fl *FunctionLiteral) expressionNode() {}
@@ -193,7 +217,7 @@ func (fl *FunctionLiteral) String() string {
 		}
 	}
 	builder.WriteString(") {\n")
-  builder.WriteString(fl.Statements.String())
+	builder.WriteString(fl.Statements.String())
 	builder.WriteString("}")
 	return builder.String()
 }
