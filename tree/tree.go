@@ -59,14 +59,14 @@ func (p *Program) String() string {
 }
 
 // TODO: parse a float instaed of an int
-type IntegerLiteral struct {
+type NumberLiteral struct {
 	Token token.Token
 	Value int64
 }
 
-func (il *IntegerLiteral) expressionNode()      {}
-func (il *IntegerLiteral) TokenLiteral() []rune { return il.Token.Literal }
-func (il *IntegerLiteral) String() string       { return string(il.Token.Literal) }
+func (il *NumberLiteral) expressionNode()      {}
+func (il *NumberLiteral) TokenLiteral() []rune { return il.Token.Literal }
+func (il *NumberLiteral) String() string       { return string(il.Token.Literal) }
 
 type Identifier struct {
 	Token token.Token

@@ -39,14 +39,30 @@ func TestParser(t *testing.T) {
               Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")},
               Value: []rune("x"),
             },
-            Expression: &tree.IntegerLiteral{
+            Expression: &tree.NumberLiteral{
               Token: token.Token{Type: token.NUMBER, Literal: []rune("5")},
               Value: 5,
             },
           },
         },
       },
-
+    },
+    {
+      input: []token.Token{
+        {Type: token.RETURN, Literal: []rune("return")},
+        {Type: token.NUMBER, Literal: []rune("5")},
+      },
+      expectation: &tree.Program{
+        Statements: []tree.Statement{
+          &tree.ReturnStatement{
+            Token: token.Token{Type: token.RETURN, Literal: []rune("return")},
+            ReturnValue: &tree.NumberLiteral{
+              Token: token.Token{Type: token.NUMBER, Literal: []rune("5")},
+              Value: 5,
+            },
+          },
+        },
+      },
     },
 	}
 

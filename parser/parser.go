@@ -169,7 +169,7 @@ func (p *Parser) parseIdentifier() (tree.Expression, error) {
 func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
   fmt.Println("parsing number literal")
 	// TODO: handle it being a float and not an integer
-	literal := &tree.IntegerLiteral{Token: p.token}
+	literal := &tree.NumberLiteral{Token: p.token}
 	value, err := strconv.ParseInt(string(p.token.Literal), 0, 64)
   fmt.Println(value)
 
