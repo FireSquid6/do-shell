@@ -134,7 +134,8 @@ func TestParser(t *testing.T) {
 							Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("add")},
 							Value: []rune("add"),
 						},
-						Expression: tree.FunctionLiteral{
+
+						Expression: &tree.FunctionLiteral{
 							Token: token.Token{Type: token.FUNCTION, Literal: []rune("fn")},
 							Parameters: []*tree.Identifier{
 								{Token: token.Token{Type: token.IDENTIFIER, Literal: []rune("x")}, Value: []rune("x")},
