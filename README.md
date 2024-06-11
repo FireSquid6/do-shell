@@ -45,3 +45,15 @@ Later I plan to provide:
 # contributions
 This is mostly a personal project, so i'd like to work on it on my own. Feel free to create issues though!
 
+
+
+# to-do
+## Parser
+- [ ] parse function call expressions
+- [ ] parse string expressions
+- [ ] parse command expressions
+- [ ] parse mod operators
+- [ ] parse for loops
+
+## Interpreter
+- [ ] object system 

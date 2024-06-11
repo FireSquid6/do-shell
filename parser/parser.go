@@ -132,6 +132,7 @@ func (p *Parser) parseBlockStatement() (*tree.BlockStatement, error) {
 		}
 		block.Statements = append(block.Statements, statement)
 	}
+  p.previousToken()
 
 	fmt.Println("done parsing block statement: ", token.ReadableTokenName(p.token))
 
@@ -287,9 +288,38 @@ func (p *Parser) parsePrefixExpression() (tree.Expression, error) {
 }
 
 func (p *Parser) parseIdentifier() (tree.Expression, error) {
-	fmt.Println("Parsing identifier: ", token.ReadableTokenName(p.token), string(p.token.Literal))
+  fmt.Println("!!!! Parsing identifier: ", token.ReadableTokenName(p.token), p.position)
+  if p.peekFor(token.LPAREN) {
+    fmt.Println("Parsing call expression: ", token.ReadableTokenName(p.token), p.position)
+    p.nextToken()
+    return p.parseCallExpression()
+  }
 	return &tree.Identifier{Token: p.token, Value: p.token.Literal}, nil
 }
+
+func (p *Parser) parseCallExpression() (tree.Expression, error) {
+  p.nextToken()
+  fmt.Println("??? Parsing call expression: ", token.ReadableTokenName(p.token), p.position)
+
+  callExpression := &tree.CallExpression{Token: p.token}
+  callExpression.Function = tree.Identifier{Token: p.token, Value: p.token.Literal}
+  callExpression.Arguments = []tree.Expression{}
+
+  for p.token.Type != token.RPAREN {
+    expression, err := p.parseExpression(LOWEST)
+
+    if err != nil {
+      return nil, errors.Join(errors.New("Error parsing call expression:"), err)
+    }
+
+    callExpression.Arguments = append(callExpression.Arguments, expression)
+    p.nextToken()
+    p.nextToken()
+    fmt.Println("Just parsed an expression in call expression: ", token.ReadableTokenName(p.token), p.position)
+  }
+
+  return callExpression, nil
+} 
 
 func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
 	literal := &tree.NumberLiteral{Token: p.token}
@@ -301,6 +331,13 @@ func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
 
 	literal.Value = value
 	return literal, nil
+}
+
+func (p *Parser) previousToken() {
+  if p.position > 0 {
+    p.position -= 1
+    p.token = p.tokens[p.position]
+  }
 }
 
 func (p *Parser) nextToken() {
@@ -453,7 +490,7 @@ func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 		return nil, errors.Join(errors.New("Error parsing expression:"), err)
 	}
 
-	for !p.peekFor(token.SEMICOLON) && precedence < p.peekPrecedence() {
+	for !(p.peekFor(token.SEMICOLON) || p.peekFor(token.COMMA)) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peek().Type]
 		if infix == nil {
 			return leftExp, nil
