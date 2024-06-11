@@ -288,6 +288,7 @@ func (p *Parser) parsePrefixExpression() (tree.Expression, error) {
 }
 
 func (p *Parser) parseIdentifier() (tree.Expression, error) {
+  fmt.Println("Parsing identifier: ", token.ReadableTokenName(p.token), string(p.token.Literal))
 	return &tree.Identifier{Token: p.token, Value: p.token.Literal}, nil
 }
 
