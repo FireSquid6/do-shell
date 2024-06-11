@@ -123,7 +123,9 @@ func (p *Parser) parseBlockStatement() (*tree.BlockStatement, error) {
   block.Statements = []tree.Statement{}
   
   for p.token.Type != token.RBRACE && p.token.Type != token.EOF {
+    fmt.Println("Parsing block statement: ", token.ReadableTokenName(p.token))
     statement, err := p.parseStatement()
+    p.nextToken()
 
     if err != nil {
       return nil, errors.Join(errors.New("Error parsing statement in block statement:"), err)
@@ -151,10 +153,11 @@ func (p *Parser) parseFunctionLiteral() (tree.Expression, error) {
   }
   literal.Parameters = params
 
-  if !p.peekFor(token.LBRACE) {
+  fmt.Println("Function literal parsing block statement: ", token.ReadableTokenName(p.token))
+
+  if p.token.Type != token.LBRACE {
     return nil, errors.New("Function literal parameters are not followed by a block statement")
   }
-  p.nextToken()
   p.nextToken()
 
   statements, err := p.parseBlockStatement()
@@ -167,7 +170,40 @@ func (p *Parser) parseFunctionLiteral() (tree.Expression, error) {
 }
 
 func (p *Parser) parseFunctionParameters() ([]*tree.Identifier, error) {
-  return []*tree.Identifier{}, nil
+  identifiers := []*tree.Identifier{}
+
+  if p.token.Type != token.LPAREN {
+    return nil, errors.New("Function parameters do not start with a left parenthesis")
+  }
+
+  p.nextToken()
+  if p.token.Type == token.RPAREN {
+    return identifiers, nil
+  }
+
+  // scary! this could infinite loop
+  // todo: fix this crap
+  for {
+    if p.token.Type != token.IDENTIFIER {
+      return nil, errors.New("Function parameters are not identifiers")
+    }
+
+    identifiers = append(identifiers, &tree.Identifier{Token: p.token, Value: p.token.Literal})
+    p.nextToken()
+    fmt.Println("Parsing function parameters 2: ", token.ReadableTokenName(p.token))
+
+    if p.token.Type == token.RPAREN || p.token.Type == token.EOF {
+      p.nextToken()
+      break
+    }
+
+    if p.token.Type != token.COMMA {
+      return nil, errors.New("Function parameters are not separated by commas")
+    }
+    p.nextToken()
+  }
+
+  return identifiers, nil
 }
 
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
@@ -256,11 +292,8 @@ func (p *Parser) parseIdentifier() (tree.Expression, error) {
 }
 
 func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
-  fmt.Println("parsing number literal")
-	// TODO: handle it being a float and not an integer
 	literal := &tree.NumberLiteral{Token: p.token}
 	value, err := strconv.ParseFloat(string(p.token.Literal), 64)
-  fmt.Println(value)
 
 	if err != nil {
     return nil, errors.Join(errors.New("Error parsing number literal:"), err) 
@@ -406,7 +439,6 @@ func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {
 }
 
 func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
-  fmt.Println(token.ReadableTokenName(p.token))
 	prefix, ok := p.prefixParseFns[p.token.Type]
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("Failed to find a prefix parse function for %s", token.ReadableTokenName(p.token)))
