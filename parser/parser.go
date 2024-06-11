@@ -341,8 +341,12 @@ func (p *Parser) ParseProgram() *tree.Program {
 		if statement != nil {
 			statements = append(statements, statement)
 		}
+    fmt.Println("Just finished a statement. Now looking at: ", token.ReadableTokenName(p.token), p.position)
 
 		p.nextToken()
+    if p.token.Type == token.EOF {
+      break
+    }
 	}
 
 	program.Statements = statements
@@ -351,12 +355,14 @@ func (p *Parser) ParseProgram() *tree.Program {
 }
 
 func (p *Parser) parseStatement() (tree.Statement, error) {
+  fmt.Println("Parsing statement: ", token.ReadableTokenName(p.token), p.position)
 	var statement tree.Statement
 	var err error
 
 	switch p.token.Type {
 	case token.LET:
 		statement, err = p.parseLetStatement()
+    fmt.Println("Done parsing let statement and now in the parseStatement world: ", token.ReadableTokenName(p.token), p.position)
 	case token.RETURN:
 		statement, err = p.parseReturnStatement()
 	default:
@@ -392,10 +398,9 @@ func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	}
 	statement.Expression = expression
 
-	for p.token.Type != token.SEMICOLON {
-		p.nextToken()
-	}
+  p.nextToken()
 	// if there's errors it also could be here that I need to call nextToken
+  fmt.Println("Done parsing let statement: ", token.ReadableTokenName(p.token), p.position)
 
 	return statement, nil
 }
@@ -411,12 +416,9 @@ func (p *Parser) parseReturnStatement() (*tree.ReturnStatement, error) {
 		return nil, errors.Join(errors.New("Error parsing expression in return statement:"), err)
 	}
 
-	statement.Expression = expression
+  p.nextToken()
 
-	// it will need to be parsed correctly
-	for p.token.Type != token.SEMICOLON {
-		p.nextToken()
-	}
+	statement.Expression = expression
 
 	return statement, nil
 }
@@ -440,6 +442,7 @@ func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {
 }
 
 func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
+  fmt.Println("Parsing expression: ", token.ReadableTokenName(p.token), p.position)
 	prefix, ok := p.prefixParseFns[p.token.Type]
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("Failed to find a prefix parse function for %s", token.ReadableTokenName(p.token)))

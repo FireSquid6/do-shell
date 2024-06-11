@@ -2,6 +2,7 @@ package parser_test
 
 import (
 	"testing"
+  "fmt"
 
 	"github.com/firesquid6/do-shell/parser"
 	"github.com/firesquid6/do-shell/token"
@@ -10,11 +11,13 @@ import (
 
 func TestParser(t *testing.T) {
 	tests := []struct {
+    name       string
 		input       []token.Token
 		expectation *tree.Program
 		expectedErr []error
 	}{
 		{
+      name: "Empty program",
 			input: []token.Token{},
 			expectation: &tree.Program{
 				Statements: []tree.Statement{},
@@ -22,6 +25,7 @@ func TestParser(t *testing.T) {
 			expectedErr: []error{},
 		},
 		{
+      name: "Let statement",
 			input: []token.Token{
 				{Type: token.LET, Literal: []rune("let")},
 				{Type: token.IDENTIFIER, Literal: []rune("x")},
@@ -47,6 +51,7 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+      name: "Return statement",
 			input: []token.Token{
 				{Type: token.RETURN, Literal: []rune("return")},
 				{Type: token.NUMBER, Literal: []rune("5")},
@@ -66,6 +71,7 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+      name: "Function literal",
 			input: []token.Token{
 				{Type: token.LET, Literal: []rune("let")},
 				{Type: token.IDENTIFIER, Literal: []rune("five")},
@@ -193,6 +199,7 @@ func TestParser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+    fmt.Println("\n\nAbout to do a new test, ", tt.name)
 		p := parser.New(tt.input)
 		program := p.ParseProgram()
 
@@ -201,12 +208,12 @@ func TestParser(t *testing.T) {
       for _, err := range p.Errors {
         t.Log(err)
       }
-			t.Errorf("Expected %d errors, got %d", len(tt.expectedErr), len(p.Errors))
+      t.Errorf("%s: Expected %d errors, got %d", tt.name, len(tt.expectedErr), len(p.Errors))
 		}
 
 		for i, err := range p.Errors {
 			if err != tt.expectedErr[i] {
-				t.Errorf("Expected error %s, got %s", tt.expectedErr[i], err)
+        t.Errorf("%s: Expected error %s, got %s", tt.name, tt.expectedErr[i], err)
 			}
 		}
 
@@ -214,7 +221,7 @@ func TestParser(t *testing.T) {
 		expectedProgramString := tt.expectation.String()
 
 		if programString != expectedProgramString {
-			t.Errorf("Expected program string to be %s, got %s", expectedProgramString, programString)
+      t.Errorf("%s: Expected program string to be %s, got %s", tt.name, expectedProgramString, programString)
 		}
 	}
 }
