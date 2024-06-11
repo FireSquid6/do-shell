@@ -7,7 +7,7 @@ import (
 
 	"github.com/firesquid6/do-shell/token"
 	"github.com/firesquid6/do-shell/tree"
-  // "github.com/firesquid6/do-shell/option"
+	// "github.com/firesquid6/do-shell/option"
 )
 
 type (
@@ -55,9 +55,9 @@ func New(tokens []token.Token) *Parser {
 	p := &Parser{tokens: tokens}
 	p.position = 0
 
-  if len(p.tokens) > 0 {
-    p.token = p.tokens[p.position]
-  }
+	if len(p.tokens) > 0 {
+		p.token = p.tokens[p.position]
+	}
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -66,11 +66,11 @@ func New(tokens []token.Token) *Parser {
 	p.registerPrefix(token.NUMBER, p.parseNumberLiteral)
 	p.registerPrefix(token.NOT, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
-  // p.registerPrefix(token.TRUE, p.parseBoolean)
-  // p.registerPrefix(token.FALSE, p.parseBoolean)
+	// p.registerPrefix(token.TRUE, p.parseBoolean)
+	// p.registerPrefix(token.FALSE, p.parseBoolean)
 
-  p.registerPrefix(token.IF, p.parseIfExpression)
-  p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
+	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -87,123 +87,123 @@ func New(tokens []token.Token) *Parser {
 }
 
 func (p *Parser) parseIfExpression() (tree.Expression, error) {
-  expression := &tree.IfExpression{Token: p.token}
+	expression := &tree.IfExpression{Token: p.token}
 
-  if !p.peekFor(token.LPAREN) {
-    return nil, errors.New("If statement is not followed by a left parenthesis")
-  }
+	if !p.peekFor(token.LPAREN) {
+		return nil, errors.New("If statement is not followed by a left parenthesis")
+	}
 
-  p.nextToken()
-  p.nextToken()
+	p.nextToken()
+	p.nextToken()
 
-  cond, err := p.parseExpression(LOWEST)
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing condition in if statement:"), err)
-  }
+	cond, err := p.parseExpression(LOWEST)
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing condition in if statement:"), err)
+	}
 
-  expression.Condition = cond
+	expression.Condition = cond
 
-  if !p.peekFor(token.LBRACE) {
-    return nil, errors.New("If statement condition is not followed by a block statement")
-  }
-  p.nextToken()
-  p.nextToken()
+	if !p.peekFor(token.LBRACE) {
+		return nil, errors.New("If statement condition is not followed by a block statement")
+	}
+	p.nextToken()
+	p.nextToken()
 
-  consequence, err := p.parseBlockStatement()
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing consequence in if statement:"), err)
-  }
-  expression.Consequence = consequence
+	consequence, err := p.parseBlockStatement()
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing consequence in if statement:"), err)
+	}
+	expression.Consequence = consequence
 
-  return expression, nil
+	return expression, nil
 }
 
 func (p *Parser) parseBlockStatement() (*tree.BlockStatement, error) {
-  block := &tree.BlockStatement{Token: p.token}
-  block.Statements = []tree.Statement{}
-  
-  for p.token.Type != token.RBRACE && p.token.Type != token.EOF {
-    fmt.Println("Parsing block statement: ", token.ReadableTokenName(p.token))
-    statement, err := p.parseStatement()
-    p.nextToken()
+	block := &tree.BlockStatement{Token: p.token}
+	block.Statements = []tree.Statement{}
 
-    if err != nil {
-      return nil, errors.Join(errors.New("Error parsing statement in block statement:"), err)
-    }
-    block.Statements = append(block.Statements, statement)
-  }
+	for p.token.Type != token.RBRACE && p.token.Type != token.EOF {
+		fmt.Println("Parsing block statement: ", token.ReadableTokenName(p.token))
+		statement, err := p.parseStatement()
+		p.nextToken()
 
-  // TODO: support else and elif statements
+		if err != nil {
+			return nil, errors.Join(errors.New("Error parsing statement in block statement:"), err)
+		}
+		block.Statements = append(block.Statements, statement)
+	}
 
-  return block, nil
+	fmt.Println("done parsing block statement: ", token.ReadableTokenName(p.token))
+
+	return block, nil
 }
 
 func (p *Parser) parseFunctionLiteral() (tree.Expression, error) {
-  literal := &tree.FunctionLiteral{Token: p.token}
+	literal := &tree.FunctionLiteral{Token: p.token}
 
-  if !p.peekFor(token.LPAREN) {
-    return nil, errors.New("Function literal is not followed by a left parenthesis")
-  }
-  p.nextToken()
+	if !p.peekFor(token.LPAREN) {
+		return nil, errors.New("Function literal is not followed by a left parenthesis")
+	}
+	p.nextToken()
 
-  params, err := p.parseFunctionParameters()
+	params, err := p.parseFunctionParameters()
 
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing function parameters:"), err)
-  }
-  literal.Parameters = params
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing function parameters:"), err)
+	}
+	literal.Parameters = params
 
-  fmt.Println("Function literal parsing block statement: ", token.ReadableTokenName(p.token))
+	fmt.Println("Function literal parsing block statement: ", token.ReadableTokenName(p.token))
 
-  if p.token.Type != token.LBRACE {
-    return nil, errors.New("Function literal parameters are not followed by a block statement")
-  }
-  p.nextToken()
+	if p.token.Type != token.LBRACE {
+		return nil, errors.New("Function literal parameters are not followed by a block statement")
+	}
+	p.nextToken()
 
-  statements, err := p.parseBlockStatement()
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing statements in function literal:"), err)
-  }
+	statements, err := p.parseBlockStatement()
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing statements in function literal:"), err)
+	}
 
-  literal.Statements = statements
-  return literal, nil
+	literal.Statements = statements
+	return literal, nil
 }
 
 func (p *Parser) parseFunctionParameters() ([]*tree.Identifier, error) {
-  identifiers := []*tree.Identifier{}
+	identifiers := []*tree.Identifier{}
 
-  if p.token.Type != token.LPAREN {
-    return nil, errors.New("Function parameters do not start with a left parenthesis")
-  }
+	if p.token.Type != token.LPAREN {
+		return nil, errors.New("Function parameters do not start with a left parenthesis")
+	}
 
-  p.nextToken()
-  if p.token.Type == token.RPAREN {
-    return identifiers, nil
-  }
+	p.nextToken()
+	if p.token.Type == token.RPAREN {
+		return identifiers, nil
+	}
 
-  // scary! this could infinite loop
-  // todo: fix this crap
-  for {
-    if p.token.Type != token.IDENTIFIER {
-      return nil, errors.New("Function parameters are not identifiers")
-    }
+	// scary! this could infinite loop
+	// todo: fix this crap
+	for {
+		if p.token.Type != token.IDENTIFIER {
+			return nil, errors.New("Function parameters are not identifiers")
+		}
 
-    identifiers = append(identifiers, &tree.Identifier{Token: p.token, Value: p.token.Literal})
-    p.nextToken()
-    fmt.Println("Parsing function parameters 2: ", token.ReadableTokenName(p.token))
+		identifiers = append(identifiers, &tree.Identifier{Token: p.token, Value: p.token.Literal})
+		p.nextToken()
+		fmt.Println("Parsing function parameters 2: ", token.ReadableTokenName(p.token))
 
-    if p.token.Type == token.RPAREN || p.token.Type == token.EOF {
-      p.nextToken()
-      break
-    }
+		if p.token.Type == token.RPAREN || p.token.Type == token.EOF {
+			p.nextToken()
+			break
+		}
 
-    if p.token.Type != token.COMMA {
-      return nil, errors.New("Function parameters are not separated by commas")
-    }
-    p.nextToken()
-  }
+		if p.token.Type != token.COMMA {
+			return nil, errors.New("Function parameters are not separated by commas")
+		}
+		p.nextToken()
+	}
 
-  return identifiers, nil
+	return identifiers, nil
 }
 
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
@@ -217,14 +217,14 @@ func (p *Parser) parseGroupedExpression() (tree.Expression, error) {
 	p.nextToken()
 
 	expression, err := p.parseExpression(LOWEST)
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 
 	if !p.peekFor(token.RPAREN) {
 		// this happens when an expression isn't closed properly
-    return nil, errors.New("Expression was not closed properly")
-    
+		return nil, errors.New("Expression was not closed properly")
+
 	}
 
 	return expression, nil
@@ -243,13 +243,12 @@ func (p *Parser) parseInfixExpression(left tree.Expression) (tree.Expression, er
 
 	precedence := p.currentPrecedence()
 	p.nextToken()
-  exp, err := p.parseExpression(precedence)
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
-  }
+	exp, err := p.parseExpression(precedence)
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
+	}
 
-
-  expression.Right = exp
+	expression.Right = exp
 
 	return expression, nil
 }
@@ -276,19 +275,19 @@ func (p *Parser) parsePrefixExpression() (tree.Expression, error) {
 		Operator: p.token.Literal,
 	}
 	p.nextToken()
-  exp, err := p.parseExpression(PREFIX)
+	exp, err := p.parseExpression(PREFIX)
 
-  if err != nil {
-    return nil, errors.Join(errors.New("error parsing prefix expression"), err)
+	if err != nil {
+		return nil, errors.Join(errors.New("error parsing prefix expression"), err)
 
-  }
-  expression.Right = exp
+	}
+	expression.Right = exp
 
 	return expression, nil
 }
 
 func (p *Parser) parseIdentifier() (tree.Expression, error) {
-  fmt.Println("Parsing identifier: ", token.ReadableTokenName(p.token), string(p.token.Literal))
+	fmt.Println("Parsing identifier: ", token.ReadableTokenName(p.token), string(p.token.Literal))
 	return &tree.Identifier{Token: p.token, Value: p.token.Literal}, nil
 }
 
@@ -297,7 +296,7 @@ func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
 	value, err := strconv.ParseFloat(string(p.token.Literal), 64)
 
 	if err != nil {
-    return nil, errors.Join(errors.New("Error parsing number literal:"), err) 
+		return nil, errors.Join(errors.New("Error parsing number literal:"), err)
 	}
 
 	literal.Value = value
@@ -307,10 +306,10 @@ func (p *Parser) parseNumberLiteral() (tree.Expression, error) {
 func (p *Parser) nextToken() {
 	p.position += 1
 
-  if p.position >= len(p.tokens) {
-    p.token = token.Token{Type: token.EOF, Literal: []rune("")}
-    return
-  }
+	if p.position >= len(p.tokens) {
+		p.token = token.Token{Type: token.EOF, Literal: []rune("")}
+		return
+	}
 	p.token = p.tokens[p.position]
 }
 
@@ -336,12 +335,12 @@ func (p *Parser) ParseProgram() *tree.Program {
 
 	for p.token.Type != token.EOF {
 		statement, err := p.parseStatement()
-    if err != nil {
-      p.Errors = append(p.Errors, err)
-    }
-    if statement != nil {
-      statements = append(statements, statement)
-    }
+		if err != nil {
+			p.Errors = append(p.Errors, err)
+		}
+		if statement != nil {
+			statements = append(statements, statement)
+		}
 
 		p.nextToken()
 	}
@@ -352,19 +351,19 @@ func (p *Parser) ParseProgram() *tree.Program {
 }
 
 func (p *Parser) parseStatement() (tree.Statement, error) {
-  var statement tree.Statement
-  var err error
+	var statement tree.Statement
+	var err error
 
 	switch p.token.Type {
 	case token.LET:
-    statement, err = p.parseLetStatement()
+		statement, err = p.parseLetStatement()
 	case token.RETURN:
 		statement, err = p.parseReturnStatement()
 	default:
 		statement, err = p.parseExpressionStatement()
 	}
 
-  return statement, err
+	return statement, err
 }
 
 func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
@@ -372,7 +371,7 @@ func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	statement := &tree.LetStatement{Token: p.token}
 
 	if !p.peekFor(token.IDENTIFIER) {
-    return nil, errors.New("let statement is not followed by identifier")
+		return nil, errors.New("let statement is not followed by identifier")
 	}
 	p.nextToken()
 
@@ -383,20 +382,20 @@ func (p *Parser) parseLetStatement() (*tree.LetStatement, error) {
 	}
 	p.nextToken()
 
-  // we have to call nextToken twice to make sure we aren't looking at the assignment token
-  // this smells like bad programming
-  p.nextToken()
-  expression, err := p.parseExpression(LOWEST)
+	// we have to call nextToken twice to make sure we aren't looking at the assignment token
+	// this smells like bad programming
+	p.nextToken()
+	expression, err := p.parseExpression(LOWEST)
 
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing expression in let statement:"), err)
-  }
-  statement.Expression = expression
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing expression in let statement:"), err)
+	}
+	statement.Expression = expression
 
 	for p.token.Type != token.SEMICOLON {
 		p.nextToken()
 	}
-  // if there's errors it also could be here that I need to call nextToken
+	// if there's errors it also could be here that I need to call nextToken
 
 	return statement, nil
 }
@@ -406,13 +405,13 @@ func (p *Parser) parseReturnStatement() (*tree.ReturnStatement, error) {
 
 	p.nextToken()
 
-  // TODO: parse expression
-  expression, err := p.parseExpression(LOWEST)
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing expression in return statement:"), err)
-  }
+	// TODO: parse expression
+	expression, err := p.parseExpression(LOWEST)
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing expression in return statement:"), err)
+	}
 
-  statement.Expression = expression
+	statement.Expression = expression
 
 	// it will need to be parsed correctly
 	for p.token.Type != token.SEMICOLON {
@@ -423,14 +422,15 @@ func (p *Parser) parseReturnStatement() (*tree.ReturnStatement, error) {
 }
 
 func (p *Parser) parseExpressionStatement() (*tree.ExpressionStatement, error) {
+	fmt.Println("Parsing expression statement: ", token.ReadableTokenName(p.token), p.position)
 	statement := &tree.ExpressionStatement{Token: p.token}
 
-  exp, err := p.parseExpression(LOWEST)
-  statement.Expression = exp
+	exp, err := p.parseExpression(LOWEST)
+	statement.Expression = exp
 
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing expression statement: "), err)
-  }
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing expression statement: "), err)
+	}
 
 	if p.peekFor(token.SEMICOLON) {
 		p.nextToken()
@@ -446,9 +446,9 @@ func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 	}
 	leftExp, err := prefix()
 
-  if err != nil {
-    return nil, errors.Join(errors.New("Error parsing expression:"), err)
-  }
+	if err != nil {
+		return nil, errors.Join(errors.New("Error parsing expression:"), err)
+	}
 
 	for !p.peekFor(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peek().Type]
@@ -459,13 +459,13 @@ func (p *Parser) parseExpression(precedence int) (tree.Expression, error) {
 		p.nextToken()
 		leftExp, err = infix(leftExp)
 
-    if err != nil {
-      return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
-    }
+		if err != nil {
+			return nil, errors.Join(errors.New("Error parsing infix expression:"), err)
+		}
 	}
 
-  // note to future me: this is probably where the issue is
-  // you're not going to the next token and are left looking at the token right before the semicolon
+	// note to future me: this is probably where the issue is
+	// you're not going to the next token and are left looking at the token right before the semicolon
 
 	return leftExp, nil
 }

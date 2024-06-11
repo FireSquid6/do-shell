@@ -8,6 +8,7 @@ import (
 type Node interface {
 	TokenLiteral() []rune
 	String() string
+  // Evaluate(ctx *interpreter.InterpreterContext) 
 }
 
 type Statement interface {
@@ -18,6 +19,7 @@ type Statement interface {
 type Expression interface {
 	Node
 	expressionNode() // dummy method to help the compiler
+
 }
 
 type InfixExpression struct {
