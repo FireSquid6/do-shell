@@ -1,6 +1,0 @@
-schema = 3
-
-[mod]
-  [mod."golang.org/x/exp"]
-    version = "v0.0.0-20240506185415-9bf2ced13842"
-    hash = "sha256-5JZE4OhePWHtObIT4RJOS+2zv265Io1yJkFeE8wHXY4="
