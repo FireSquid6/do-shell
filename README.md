@@ -8,13 +8,7 @@ Do shell excells in places where a simple bash script isn't sufficient, but a fu
 
 # Examples
 ## Instant CLI
-```dosh
-#!/usr/bin/env dosh
-use "std:cli"
-
-struct 
-
-```
+WIP
 
 ## HTTP
 ```dosh
@@ -42,5 +36,5 @@ WIP
 ## Run commands
 WIP
 
-
 ## JSON / YAML Handling
+WIP
