@@ -1,7 +1,0 @@
-let four = 2 * 2;
-
-if four == 4 {
-    print("four is 4");
-} else {
-    print("four is not 4");
-}
