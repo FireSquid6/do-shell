@@ -3,7 +3,6 @@ mod language_server;
 
 use clap::Subcommand;
 use clap::Parser;
-use std::path::PathBuf;
 
 use language_server::start_server;
 
