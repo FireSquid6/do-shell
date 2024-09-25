@@ -21,6 +21,7 @@ enum Commands {
     Ls {
         root: Option<String>,
     },
+    Repl {},
 }
 
 fn main() {
@@ -29,6 +30,7 @@ fn main() {
     match &cli.command {
         Some(Commands::Run { filepath }) => { println!("Running file: {}", filepath) }
         Some(Commands::Ls { root }) => { start_server(root.clone())}
+        Some(Commands::Repl {}) => { println!("Starting REPL") }
         None => { println!("Command not recognized") }
     }
 }
