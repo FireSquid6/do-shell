@@ -1,6 +1,8 @@
-mod scanner;
+mod interpreter;
+mod language_server;
+
 
 
 fn main() {
-    println!("Hello, world!");
+    println!("Hllo, world!");
 }
