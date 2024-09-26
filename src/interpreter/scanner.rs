@@ -1,3 +1,5 @@
+use super::error::{InterpreterErrors, ErrorKind};
+
 #[derive(Debug)]
 enum TokenKind {
     LPAREN, RPAREN, LBRACE, LBRACKET, RBRACKET, RBRACE, COMMA, DOT, SEMICOLON, COLON,
@@ -39,6 +41,7 @@ pub struct Scanner {
     tokens: Vec<Token>,
 
     current: u32,
+    errors: InterpreterErrors,
 
     line: u32,
     col: u32
@@ -52,6 +55,8 @@ impl Scanner {
 
             line: 1,
             col: 1,
+
+            errors: InterpreterErrors::new(),
 
             current: 0,
         }
@@ -109,7 +114,9 @@ impl Scanner {
 
             }
 
-            _ => self.add_token(TokenKind::UNKNOWN, c.to_string())
+            _ => {
+                self.errors.add_error("Unexpected token".to_string(), ErrorKind::LEXER);
+            }
 
         }
 
@@ -119,8 +126,8 @@ impl Scanner {
 
 #[cfg(test)]
 fn test_scanner() {
-    let scanner = Scanner::new("let x = 10;".to_string());
-
+    let mut scanner = Scanner::new("let x = 10;".to_string());
+    
 }
 
 
