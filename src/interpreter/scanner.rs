@@ -88,7 +88,7 @@ impl Scanner {
 
     }
 
-    fn add_token_with_char(self: &mut Scanner, kind: TokenKind, c: char) {
+    fn add_token_char(self: &mut Scanner, kind: TokenKind, c: char) {
         self.tokens.push(Token::new(kind, c.to_string(), self.line, self.col));
     }
 
@@ -107,22 +107,30 @@ impl Scanner {
         return false;
     }
 
+    fn double_char_token(self: &mut Scanner, c: char, single_kind: TokenKind, expected: char, double_kind: TokenKind) {
+        if self.peek_and_move(expected) {
+            self.add_token(double_kind, format!("{}{}", c, expected));
+        } else {
+            self.add_token_char(single_kind, c)
+        }
+    }
+
 
     fn scan_token(self: &mut Scanner) {
         let c = self.advance();
 
         match c {
-            '(' => self.add_token_with_char(TokenKind::LPAREN, c),
-            ')' => self.add_token_with_char(TokenKind::RPAREN, c),
-            '[' => self.add_token_with_char(TokenKind::LBRACKET, c),
-            ']' => self.add_token_with_char(TokenKind::RBRACKET, c),
-            '{' => self.add_token_with_char(TokenKind::LBRACE, c),
-            '}' => self.add_token_with_char(TokenKind::RBRACE, c),
-            ',' => self.add_token_with_char(TokenKind::COMMA, c),
-            '.' => self.add_token_with_char(TokenKind::DOT, c),
-            '-' => self.add_token_with_char(TokenKind::MINUS, c),
-            '+' => self.add_token_with_char(TokenKind::PLUS, c),
-            ';' => self.add_token_with_char(TokenKind::SEMICOLON, c),
+            '(' => self.add_token_char(TokenKind::LPAREN, c),
+            ')' => self.add_token_char(TokenKind::RPAREN, c),
+            '[' => self.add_token_char(TokenKind::LBRACKET, c),
+            ']' => self.add_token_char(TokenKind::RBRACKET, c),
+            '{' => self.add_token_char(TokenKind::LBRACE, c),
+            '}' => self.add_token_char(TokenKind::RBRACE, c),
+            ',' => self.add_token_char(TokenKind::COMMA, c),
+            '.' => self.add_token_char(TokenKind::DOT, c),
+            '-' => self.add_token_char(TokenKind::MINUS, c),
+            '+' => self.add_token_char(TokenKind::PLUS, c),
+            ';' => self.add_token_char(TokenKind::SEMICOLON, c),
 
             // TODO - could this be simpler? It's probably fine tbh
             // TODO - map of single chars and map of double chars
@@ -140,35 +148,35 @@ impl Scanner {
                 if self.peek_and_move('*') {
                     self.add_token(TokenKind::RAISETO, "**".to_string());
                 } else {
-                    self.add_token_with_char(TokenKind::MULTIPLY, c);
+                    self.add_token_char(TokenKind::MULTIPLY, c);
                 }
             }
             '/' => {
                 if self.peek_and_move('/') {
                     self.add_token(TokenKind::INTEGERDIVIDE, "//".to_string());
                 } else {
-                    self.add_token_with_char(TokenKind::DIVIDE, c);
+                    self.add_token_char(TokenKind::DIVIDE, c);
                 }
             }
             '!' => {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::NOTEQUAL, "!=".to_string());
                 } else {
-                    self.add_token_with_char(TokenKind::NOT, c);
+                    self.add_token_char(TokenKind::NOT, c);
                 }
             }
             '<' => {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::LESSEQUAL, "<=".to_string());
                 } else {
-                    self.add_token_with_char(TokenKind::LESS, c);
+                    self.add_token_char(TokenKind::LESS, c);
                 }
             }
             '>' => {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::GREATEREQUAL, ">=".to_string());
                 } else {
-                    self.add_token_with_char(TokenKind::GREATER, c);
+                    self.add_token_char(TokenKind::GREATER, c);
                 }
             }
             '|' => {
@@ -189,7 +197,7 @@ impl Scanner {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::EQUAL, "==".to_string());
                 } else {
-                    self.add_token_with_char(TokenKind::ASSIGN, c);
+                    self.add_token_char(TokenKind::ASSIGN, c);
                 }
             }
             ' ' | '\t' => {}
