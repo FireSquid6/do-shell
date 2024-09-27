@@ -84,20 +84,33 @@ impl Scanner {
     }
 
     fn add_token(self: &mut Scanner, kind: TokenKind, lexeme: String) {
-        self.tokens.push(Token::new(kind, lexeme, self.line, self.col))
+        self.tokens.push(Token::new(kind, lexeme, self.line, self.col));
 
     }
 
     fn add_token_at_current(self: &mut Scanner, kind: TokenKind) {
-        println!("Adding token: {:?}", kind);
         let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
-        self.tokens.push(Token::new(kind, c.to_string(), self.line, self.col))
+        self.tokens.push(Token::new(kind, c.to_string(), self.line, self.col));
+    }
+
+
+    fn peek_and_move(self: &mut Scanner, expected: char) -> bool {
+        if self.current >= self.source.len() as u32 {
+            return false;
+        }
+
+        let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
+        if c == expected {
+            self.advance();
+            return true;
+        }
+
+        return false;
     }
 
 
     fn scan_token(self: &mut Scanner) {
         let c = self.advance();
-        println!("Scanning: {}", c);
 
         match c {
             '(' => self.add_token_at_current(TokenKind::LPAREN),
@@ -111,6 +124,20 @@ impl Scanner {
             '-' => self.add_token_at_current(TokenKind::MINUS),
             '+' => self.add_token_at_current(TokenKind::PLUS),
             ';' => self.add_token_at_current(TokenKind::SEMICOLON),
+            '*' => {
+                if self.peek_and_move('*') {
+                    self.add_token(TokenKind::RAISETO, "**".to_string());
+                } else {
+                    self.add_token_at_current(TokenKind::MULTIPLY);
+                }
+            }
+            '/' => {
+                if self.peek_and_move('/') {
+                    self.add_token(TokenKind::INTEGERDIVIDE, "//".to_string());
+                } else {
+                    self.add_token_at_current(TokenKind::DIVIDE);
+                }
+            }
             '\n' => {
                 // TODO - when we see \n, look back. If it's something that implies the start of
                 // a new line, then we need to insert a semicolon. A line probably ends if:
