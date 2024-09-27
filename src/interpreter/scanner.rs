@@ -107,11 +107,19 @@ impl Scanner {
         return false;
     }
 
-    fn double_char_token(self: &mut Scanner, c: char, single_kind: TokenKind, expected: char, double_kind: TokenKind) {
+    fn double_char_or_default(self: &mut Scanner, c: char, single_kind: TokenKind, expected: char, double_kind: TokenKind) {
         if self.peek_and_move(expected) {
             self.add_token(double_kind, format!("{}{}", c, expected));
         } else {
             self.add_token_char(single_kind, c)
+        }
+    }
+
+    fn double_char_or_error(self: &mut Scanner, c: char, expected: char, double_kind: TokenKind) {
+        if self.peek_and_move(expected) {
+            self.add_token(double_kind, format!("{}{}", c, expected));
+        } else {
+            self.errors.add_error("Lexer error".to_string(), ErrorKind::LEXER);
         }
     }
 
@@ -120,6 +128,14 @@ impl Scanner {
         let c = self.advance();
 
         match c {
+            '#' => {
+                // skip until the end of the line
+                while self.current < self.source.len() as u32 && self.source.chars().nth(self.current as usize).unwrap_or('\0') != '\n' {
+                    self.advance();
+                }
+            }
+
+            // single chars
             '(' => self.add_token_char(TokenKind::LPAREN, c),
             ')' => self.add_token_char(TokenKind::RPAREN, c),
             '[' => self.add_token_char(TokenKind::LBRACKET, c),
@@ -131,75 +147,20 @@ impl Scanner {
             '-' => self.add_token_char(TokenKind::MINUS, c),
             '+' => self.add_token_char(TokenKind::PLUS, c),
             ';' => self.add_token_char(TokenKind::SEMICOLON, c),
+            '%' => self.add_token_char(TokenKind::MODULO, c),
+            
+            // double chars
+            '*' => self.double_char_or_default(c, TokenKind::MULTIPLY, '*', TokenKind::RAISETO),
+            '/' => self.double_char_or_default(c, TokenKind::DIVIDE, '/', TokenKind::INTEGERDIVIDE),
+            '!' => self.double_char_or_default(c, TokenKind::NOT, '=', TokenKind::NOTEQUAL),
+            '<' => self.double_char_or_default(c, TokenKind::LESS, '=', TokenKind::LESSEQUAL),
+            '>' => self.double_char_or_default(c, TokenKind::GREATER, '=', TokenKind::GREATEREQUAL),
+            '=' => self.double_char_or_default(c, TokenKind::ASSIGN, '=', TokenKind::EQUAL),
 
-            // TODO - could this be simpler? It's probably fine tbh
-            // TODO - map of single chars and map of double chars
-            // Order:
-            // - check identifier, string, etc.
-            // - check double chars
-            // - check single chars
-            '#' => {
-                // skip until the end of the line
-                while self.current < self.source.len() as u32 && self.source.chars().nth(self.current as usize).unwrap_or('\0') != '\n' {
-                    self.advance();
-                }
-            }
-            '*' => {
-                if self.peek_and_move('*') {
-                    self.add_token(TokenKind::RAISETO, "**".to_string());
-                } else {
-                    self.add_token_char(TokenKind::MULTIPLY, c);
-                }
-            }
-            '/' => {
-                if self.peek_and_move('/') {
-                    self.add_token(TokenKind::INTEGERDIVIDE, "//".to_string());
-                } else {
-                    self.add_token_char(TokenKind::DIVIDE, c);
-                }
-            }
-            '!' => {
-                if self.peek_and_move('=') {
-                    self.add_token(TokenKind::NOTEQUAL, "!=".to_string());
-                } else {
-                    self.add_token_char(TokenKind::NOT, c);
-                }
-            }
-            '<' => {
-                if self.peek_and_move('=') {
-                    self.add_token(TokenKind::LESSEQUAL, "<=".to_string());
-                } else {
-                    self.add_token_char(TokenKind::LESS, c);
-                }
-            }
-            '>' => {
-                if self.peek_and_move('=') {
-                    self.add_token(TokenKind::GREATEREQUAL, ">=".to_string());
-                } else {
-                    self.add_token_char(TokenKind::GREATER, c);
-                }
-            }
-            '|' => {
-                if self.peek_and_move('|') {
-                    self.add_token(TokenKind::OR, "||".to_string());
-                } else {
-                    self.errors.add_error("Unexpected token |".to_string(), ErrorKind::LEXER);
-                }
-            }
-            '&' => {
-                if self.peek_and_move('&') {
-                    self.add_token(TokenKind::AND, "&&".to_string());
-                } else {
-                    self.errors.add_error("Unexpected token &".to_string(), ErrorKind::LEXER);
-                }
-            }
-            '=' => {
-                if self.peek_and_move('=') {
-                    self.add_token(TokenKind::EQUAL, "==".to_string());
-                } else {
-                    self.add_token_char(TokenKind::ASSIGN, c);
-                }
-            }
+            '&' => self.double_char_or_error(c, '&', TokenKind::AND),
+            '|' => self.double_char_or_error(c, '|', TokenKind::OR),
+
+            // always skip whitespace
             ' ' | '\t' => {}
             '\n' => {
                 // TODO - when we see \n, look back. If it's something that implies the start of
