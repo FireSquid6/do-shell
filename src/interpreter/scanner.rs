@@ -89,6 +89,7 @@ impl Scanner {
     }
 
     fn add_token_at_current(self: &mut Scanner, kind: TokenKind) {
+        println!("Adding token: {:?}", kind);
         let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
         self.tokens.push(Token::new(kind, c.to_string(), self.line, self.col))
     }
@@ -96,6 +97,7 @@ impl Scanner {
 
     fn scan_token(self: &mut Scanner) {
         let c = self.advance();
+        println!("Scanning: {}", c);
 
         match c {
             '(' => self.add_token_at_current(TokenKind::LPAREN),
@@ -117,6 +119,13 @@ impl Scanner {
                 // We definitely DO NOT want to insert a semicolon if:
                 // - the previous token is a comma
                 // - the next valid character is a dot (probably chaining methods or properties)
+                // - the next valid character is a comma (probably a list)
+                // - the next valid character is a || or && (probably a logical operator)
+                //
+                // Other valid way:
+                // - convert all \ns in a row to a single NEWLINE token
+                // - after we scan, we can insert semicolons where needed and remove all NEWLINE
+                // tokens
 
             }
 
