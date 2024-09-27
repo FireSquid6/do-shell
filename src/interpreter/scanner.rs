@@ -130,6 +130,12 @@ impl Scanner {
             // - check identifier, string, etc.
             // - check double chars
             // - check single chars
+            '#' => {
+                // skip until the end of the line
+                while self.current < self.source.len() as u32 && self.source.chars().nth(self.current as usize).unwrap_or('\0') != '\n' {
+                    self.advance();
+                }
+            }
             '*' => {
                 if self.peek_and_move('*') {
                     self.add_token(TokenKind::RAISETO, "**".to_string());
@@ -186,6 +192,7 @@ impl Scanner {
                     self.add_token_with_char(TokenKind::ASSIGN, c);
                 }
             }
+            ' ' | '\t' => {}
             '\n' => {
                 // TODO - when we see \n, look back. If it's something that implies the start of
                 // a new line, then we need to insert a semicolon. A line probably ends if:
@@ -257,16 +264,34 @@ mod tests {
 
         assert_eq!(scanner.tokens.len(), expected_tokens.len());
         for (i, token) in scanner.tokens.iter().enumerate() {
+            assert_eq!(token.kind, expected_tokens[i]);
+            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
+        }
+    }
+    // TODO - test utility function because this is some garbage code
+
+    #[test]
+    fn test_comments() {
+        let mut scanner = Scanner::new("() []; # this comment keeps going and should be ignored\n ==;".to_string());
+        scanner.scan();
+        let expected_tokens: Vec<TokenKind> = vec![
+            TokenKind::LPAREN, TokenKind::RPAREN, TokenKind::LBRACKET, TokenKind::RBRACKET, TokenKind::SEMICOLON, TokenKind::EQUAL, TokenKind::SEMICOLON,
+        ];
+        let expected_lexemes: Vec<&str> = vec![
+            "(", ")", "[", "]", ";", "==", ";"
+        ];
+
+        println!("{:?}", scanner.errors);
+        assert_eq!(scanner.errors.has_errors(), false);
+
+        println!("{:?}", scanner.tokens);
+        assert_eq!(scanner.tokens.len(), expected_tokens.len());
+        for (i, token) in scanner.tokens.iter().enumerate() {
             println!("{:?}", token);
             assert_eq!(token.kind, expected_tokens[i]);
             assert_eq!(token.lexeme, expected_lexemes[i].to_string());
         }
     }
-
-    // #[test]
-    // fn test_comments() {
-    //     // "let i = 0;  # this comment keeps going and should be ignored\ni = 1;"
-    // }
     //
     // #[test]
     // fn test_string_literals() {
