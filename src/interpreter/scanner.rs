@@ -5,7 +5,7 @@ enum TokenKind {
     LPAREN, RPAREN, LBRACE, LBRACKET, RBRACKET, RBRACE, COMMA, DOT, SEMICOLON, COLON,
     MINUS, PLUS, MULTIPLY, DIVIDE, INTEGERDIVIDE, MODULO, RAISETO,
     EQUAL, NOTEQUAL, GREATER, GREATEREQUAL, LESS, LESSEQUAL,
-    AND, OR, NOT,
+    AND, OR, NOT, ASSIGN,
     IDENTIFIER, STING, NUMBER,
     IF, ELIF, ELSE, LET, FOR, USE, STRUCT, WHILE, RETURN, // MATCH, CASE
     EOF, UNKNOWN,
@@ -124,6 +124,8 @@ impl Scanner {
             '-' => self.add_token_at_current(TokenKind::MINUS),
             '+' => self.add_token_at_current(TokenKind::PLUS),
             ';' => self.add_token_at_current(TokenKind::SEMICOLON),
+
+            // TODO - could this be simpler? It's probably fine tbh
             '*' => {
                 if self.peek_and_move('*') {
                     self.add_token(TokenKind::RAISETO, "**".to_string());
@@ -136,6 +138,48 @@ impl Scanner {
                     self.add_token(TokenKind::INTEGERDIVIDE, "//".to_string());
                 } else {
                     self.add_token_at_current(TokenKind::DIVIDE);
+                }
+            }
+            '!' => {
+                if self.peek_and_move('=') {
+                    self.add_token(TokenKind::NOTEQUAL, "!=".to_string());
+                } else {
+                    self.add_token_at_current(TokenKind::NOT);
+                }
+            }
+            '<' => {
+                if self.peek_and_move('=') {
+                    self.add_token(TokenKind::LESSEQUAL, "<=".to_string());
+                } else {
+                    self.add_token_at_current(TokenKind::LESS);
+                }
+            }
+            '>' => {
+                if self.peek_and_move('=') {
+                    self.add_token(TokenKind::GREATEREQUAL, ">=".to_string());
+                } else {
+                    self.add_token_at_current(TokenKind::GREATER);
+                }
+            }
+            '|' => {
+                if self.peek_and_move('|') {
+                    self.add_token(TokenKind::OR, "||".to_string());
+                } else {
+                    self.errors.add_error("Unexpected token |".to_string(), ErrorKind::LEXER);
+                }
+            }
+            '&' => {
+                if self.peek_and_move('&') {
+                    self.add_token(TokenKind::AND, "&&".to_string());
+                } else {
+                    self.errors.add_error("Unexpected token &".to_string(), ErrorKind::LEXER);
+                }
+            }
+            '=' => {
+                if self.peek_and_move('=') {
+                    self.add_token(TokenKind::EQUAL, "==".to_string());
+                } else {
+                    self.add_token_at_current(TokenKind::ASSIGN);
                 }
             }
             '\n' => {
@@ -170,6 +214,7 @@ impl Scanner {
 mod tests {
     use super::*;
 
+    // TODO - also test that the lexemes are correct
     #[test]
     fn test_basic_tokens() {
         let mut scanner = Scanner::new("()[]-+.,;*/".to_string());
@@ -189,12 +234,14 @@ mod tests {
 
     #[test]
     fn test_multi_char_tokens() {
-        let mut scanner = Scanner::new("// != == >= <= && || !".to_string());
+        let mut scanner = Scanner::new("// = != == >= <= && || !".to_string());
         scanner.scan();
         let expected_tokens: Vec<TokenKind> = vec![
-            TokenKind::INTEGERDIVIDE, TokenKind::NOTEQUAL, TokenKind::EQUAL, TokenKind::GREATEREQUAL,
+            TokenKind::INTEGERDIVIDE, TokenKind::ASSIGN, TokenKind::NOTEQUAL, TokenKind::EQUAL, TokenKind::GREATEREQUAL,
             TokenKind::LESSEQUAL, TokenKind::AND, TokenKind::OR, TokenKind::NOT
         ];
+
+        println!("{:?}", scanner.tokens);
 
         assert_eq!(scanner.tokens.len(), expected_tokens.len());
         for (i, token) in scanner.tokens.iter().enumerate() {
@@ -202,6 +249,27 @@ mod tests {
         }
 
         assert_eq!(0, 1);
+    }
+
+    #[test]
+    fn test_comments() {
+        // "let i = 0;  # this comment keeps going and should be ignored\ni = 1;"
+    }
+
+    fn test_string_literals() {
+        // "let myString = \"Hello, world!\";"
+    }
+
+    fn test_number_literals() {
+        // "let myNumber = 1234;\nlet myFloat = 12.34;"
+    }
+
+    fn test_identifiers() {
+        // "let myVar = 1234;\nlet myFloat = 12.34;"
+    }
+
+    fn test_keywords() {
+        // "return let if else for while struct use identifier"
     }
 
 }
