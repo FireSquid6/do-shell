@@ -251,25 +251,29 @@ mod tests {
         assert_eq!(0, 1);
     }
 
-    #[test]
-    fn test_comments() {
-        // "let i = 0;  # this comment keeps going and should be ignored\ni = 1;"
-    }
-
-    fn test_string_literals() {
-        // "let myString = \"Hello, world!\";"
-    }
-
-    fn test_number_literals() {
-        // "let myNumber = 1234;\nlet myFloat = 12.34;"
-    }
-
-    fn test_identifiers() {
-        // "let myVar = 1234;\nlet myFloat = 12.34;"
-    }
-
-    fn test_keywords() {
-        // "return let if else for while struct use identifier"
-    }
+    // #[test]
+    // fn test_comments() {
+    //     // "let i = 0;  # this comment keeps going and should be ignored\ni = 1;"
+    // }
+    //
+    // #[test]
+    // fn test_string_literals() {
+    //     // "let myString = \"Hello, world!\";"
+    // }
+    //
+    // #[test]
+    // fn test_number_literals() {
+    //     // "let myNumber = 1234;\nlet myFloat = 12.34;"
+    // }
+    //
+    // #[test]
+    // fn test_identifiers() {
+    //     // "let myVar = 1234;\nlet myFloat = 12.34;"
+    // }
+    //
+    // #[test]
+    // fn test_keywords() {
+    //     // "return let if else for while struct use identifier"
+    // }
 
 }
