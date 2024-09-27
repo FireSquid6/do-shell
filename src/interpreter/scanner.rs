@@ -88,8 +88,7 @@ impl Scanner {
 
     }
 
-    fn add_token_at_current(self: &mut Scanner, kind: TokenKind) {
-        let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
+    fn add_token_with_char(self: &mut Scanner, kind: TokenKind, c: char) {
         self.tokens.push(Token::new(kind, c.to_string(), self.line, self.col));
     }
 
@@ -113,52 +112,57 @@ impl Scanner {
         let c = self.advance();
 
         match c {
-            '(' => self.add_token_at_current(TokenKind::LPAREN),
-            ')' => self.add_token_at_current(TokenKind::RPAREN),
-            '[' => self.add_token_at_current(TokenKind::LBRACKET),
-            ']' => self.add_token_at_current(TokenKind::RBRACKET),
-            '{' => self.add_token_at_current(TokenKind::LBRACE),
-            '}' => self.add_token_at_current(TokenKind::RBRACE),
-            ',' => self.add_token_at_current(TokenKind::COMMA),
-            '.' => self.add_token_at_current(TokenKind::DOT),
-            '-' => self.add_token_at_current(TokenKind::MINUS),
-            '+' => self.add_token_at_current(TokenKind::PLUS),
-            ';' => self.add_token_at_current(TokenKind::SEMICOLON),
+            '(' => self.add_token_with_char(TokenKind::LPAREN, c),
+            ')' => self.add_token_with_char(TokenKind::RPAREN, c),
+            '[' => self.add_token_with_char(TokenKind::LBRACKET, c),
+            ']' => self.add_token_with_char(TokenKind::RBRACKET, c),
+            '{' => self.add_token_with_char(TokenKind::LBRACE, c),
+            '}' => self.add_token_with_char(TokenKind::RBRACE, c),
+            ',' => self.add_token_with_char(TokenKind::COMMA, c),
+            '.' => self.add_token_with_char(TokenKind::DOT, c),
+            '-' => self.add_token_with_char(TokenKind::MINUS, c),
+            '+' => self.add_token_with_char(TokenKind::PLUS, c),
+            ';' => self.add_token_with_char(TokenKind::SEMICOLON, c),
 
             // TODO - could this be simpler? It's probably fine tbh
+            // TODO - map of single chars and map of double chars
+            // Order:
+            // - check identifier, string, etc.
+            // - check double chars
+            // - check single chars
             '*' => {
                 if self.peek_and_move('*') {
                     self.add_token(TokenKind::RAISETO, "**".to_string());
                 } else {
-                    self.add_token_at_current(TokenKind::MULTIPLY);
+                    self.add_token_with_char(TokenKind::MULTIPLY, c);
                 }
             }
             '/' => {
                 if self.peek_and_move('/') {
                     self.add_token(TokenKind::INTEGERDIVIDE, "//".to_string());
                 } else {
-                    self.add_token_at_current(TokenKind::DIVIDE);
+                    self.add_token_with_char(TokenKind::DIVIDE, c);
                 }
             }
             '!' => {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::NOTEQUAL, "!=".to_string());
                 } else {
-                    self.add_token_at_current(TokenKind::NOT);
+                    self.add_token_with_char(TokenKind::NOT, c);
                 }
             }
             '<' => {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::LESSEQUAL, "<=".to_string());
                 } else {
-                    self.add_token_at_current(TokenKind::LESS);
+                    self.add_token_with_char(TokenKind::LESS, c);
                 }
             }
             '>' => {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::GREATEREQUAL, ">=".to_string());
                 } else {
-                    self.add_token_at_current(TokenKind::GREATER);
+                    self.add_token_with_char(TokenKind::GREATER, c);
                 }
             }
             '|' => {
@@ -179,7 +183,7 @@ impl Scanner {
                 if self.peek_and_move('=') {
                     self.add_token(TokenKind::EQUAL, "==".to_string());
                 } else {
-                    self.add_token_at_current(TokenKind::ASSIGN);
+                    self.add_token_with_char(TokenKind::ASSIGN, c);
                 }
             }
             '\n' => {
@@ -225,10 +229,14 @@ mod tests {
             TokenKind::MINUS, TokenKind::PLUS, TokenKind::DOT, TokenKind::COMMA, TokenKind::SEMICOLON,
             TokenKind::MULTIPLY, TokenKind::DIVIDE
         ];
+        let expected_lexemes: Vec<&str> = vec![
+            "(", ")", "[", "]", "-", "+", ".", ",", ";", "*", "/"
+        ];
 
         assert_eq!(scanner.tokens.len(), expected_tokens.len());
         for (i, token) in scanner.tokens.iter().enumerate() {
             assert_eq!(token.kind, expected_tokens[i]);
+            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
         }
     }
 
@@ -241,14 +249,18 @@ mod tests {
             TokenKind::LESSEQUAL, TokenKind::AND, TokenKind::OR, TokenKind::NOT
         ];
 
+        let expected_lexemes: Vec<&str> = vec![
+            "//", "=", "!=", "==", ">=", "<=", "&&", "||", "!"
+        ];
+
         println!("{:?}", scanner.tokens);
 
         assert_eq!(scanner.tokens.len(), expected_tokens.len());
         for (i, token) in scanner.tokens.iter().enumerate() {
+            println!("{:?}", token);
             assert_eq!(token.kind, expected_tokens[i]);
+            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
         }
-
-        assert_eq!(0, 1);
     }
 
     // #[test]
