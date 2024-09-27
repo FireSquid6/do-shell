@@ -1,6 +1,6 @@
 use super::error::{InterpreterErrors, ErrorKind};
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 enum TokenKind {
     LPAREN, RPAREN, LBRACE, LBRACKET, RBRACKET, RBRACE, COMMA, DOT, SEMICOLON, COLON,
     MINUS, PLUS, MULTIPLY, DIVIDE, INTEGERDIVIDE, MODULO, RAISETO,
@@ -48,6 +48,12 @@ pub struct Scanner {
 }
 
 impl Scanner {
+    pub fn scan(self: &mut Scanner) {
+        while self.current < self.source.len() as u32 {
+            self.scan_token();
+        }
+    }
+
     fn new(source: String) -> Scanner {
         Scanner {
             source,
@@ -101,7 +107,6 @@ impl Scanner {
             '.' => self.add_token_at_current(TokenKind::DOT),
             '-' => self.add_token_at_current(TokenKind::MINUS),
             '+' => self.add_token_at_current(TokenKind::PLUS),
-            '*' => self.add_token_at_current(TokenKind::MULTIPLY),
             ';' => self.add_token_at_current(TokenKind::SEMICOLON),
             '\n' => {
                 // TODO - when we see \n, look back. If it's something that implies the start of
@@ -124,11 +129,22 @@ impl Scanner {
 }
 
 
-#[cfg(test)]
-fn test_scanner() {
-    let mut scanner = Scanner::new("let x = 10;".to_string());
-    
+#[cfg(test)] 
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scanner() {
+        let mut scanner = Scanner::new("()[]-+.,;".to_string());
+        scanner.scan();
+
+        let expected_tokens: Vec<TokenKind> = vec![
+            TokenKind::LPAREN, TokenKind::RPAREN, TokenKind::LBRACKET, TokenKind::RBRACKET,
+            TokenKind::MINUS, TokenKind::PLUS, TokenKind::DOT, TokenKind::COMMA, TokenKind::SEMICOLON
+        ];
+
+        for (i, token) in scanner.tokens.iter().enumerate() {
+            assert_eq!(token.kind, expected_tokens[i]);
+        }
+    }
 }
-
-
-

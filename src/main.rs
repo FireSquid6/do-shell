@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 mod interpreter;
 mod language_server;
 
