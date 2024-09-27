@@ -12,6 +12,7 @@ enum TokenKind {
 }
 
 
+#[derive(Debug)]
 pub struct Token {
     kind: TokenKind,
     lexeme: String,
@@ -134,17 +135,37 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_scanner() {
-        let mut scanner = Scanner::new("()[]-+.,;".to_string());
+    fn test_basic_tokens() {
+        let mut scanner = Scanner::new("()[]-+.,;*/".to_string());
         scanner.scan();
 
         let expected_tokens: Vec<TokenKind> = vec![
             TokenKind::LPAREN, TokenKind::RPAREN, TokenKind::LBRACKET, TokenKind::RBRACKET,
-            TokenKind::MINUS, TokenKind::PLUS, TokenKind::DOT, TokenKind::COMMA, TokenKind::SEMICOLON
+            TokenKind::MINUS, TokenKind::PLUS, TokenKind::DOT, TokenKind::COMMA, TokenKind::SEMICOLON,
+            TokenKind::MULTIPLY, TokenKind::DIVIDE
         ];
 
+        assert_eq!(scanner.tokens.len(), expected_tokens.len());
         for (i, token) in scanner.tokens.iter().enumerate() {
             assert_eq!(token.kind, expected_tokens[i]);
         }
     }
+
+    #[test]
+    fn test_multi_char_tokens() {
+        let mut scanner = Scanner::new("// != == >= <= && || !".to_string());
+        scanner.scan();
+        let expected_tokens: Vec<TokenKind> = vec![
+            TokenKind::INTEGERDIVIDE, TokenKind::NOTEQUAL, TokenKind::EQUAL, TokenKind::GREATEREQUAL,
+            TokenKind::LESSEQUAL, TokenKind::AND, TokenKind::OR, TokenKind::NOT
+        ];
+
+        assert_eq!(scanner.tokens.len(), expected_tokens.len());
+        for (i, token) in scanner.tokens.iter().enumerate() {
+            assert_eq!(token.kind, expected_tokens[i]);
+        }
+
+        assert_eq!(0, 1);
+    }
+
 }
