@@ -33,7 +33,25 @@ impl Token {
             column,
         }
     }
+}
 
+fn is_just_a_normal_number_no_bullshit(c: char) -> bool {
+    return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9';
+}
+
+fn identifier_token_type(lexeme: String) -> TokenKind {
+    match lexeme.as_str() {
+        "if" => TokenKind::IF,
+        "elif" => TokenKind::ELIF,
+        "else" => TokenKind::ELSE,
+        "let" => TokenKind::LET,
+        "for" => TokenKind::FOR,
+        "use" => TokenKind::USE,
+        "struct" => TokenKind::STRUCT,
+        "while" => TokenKind::WHILE,
+        "return" => TokenKind::RETURN,
+        _ => TokenKind::IDENTIFIER
+    }
 }
 
 
@@ -124,6 +142,41 @@ impl Scanner {
     }
 
 
+    fn scan_identifier(self: &mut Scanner, c: char) {
+        let mut lexeme = c.to_string();
+
+        while self.current < self.source.len() as u32 {
+            let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
+            if c.is_alphanumeric() || c == '_' {
+                lexeme.push(c);
+                self.advance();
+            } else {
+                break;
+            }
+        }
+
+        let lexeme_clone = lexeme.clone();
+        let kind = identifier_token_type(lexeme_clone);
+        self.add_token(kind, lexeme);
+    }
+
+    fn scan_number(self: &mut Scanner, c: char) {
+        let mut lexeme = c.to_string();
+
+        while self.current < self.source.len() as u32 {
+            let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
+            if is_just_a_normal_number_no_bullshit(c) {
+                lexeme.push(c);
+                self.advance();
+            } else {
+                break;
+            }
+        }
+
+        self.add_token(TokenKind::NUMBER, lexeme);
+    }
+
+
     fn scan_token(self: &mut Scanner) {
         let c = self.advance();
 
@@ -160,6 +213,10 @@ impl Scanner {
             '&' => self.double_char_or_error(c, '&', TokenKind::AND),
             '|' => self.double_char_or_error(c, '|', TokenKind::OR),
 
+            '"' | '\'' => {
+                // TODO - scan string literal
+            }
+
             // always skip whitespace
             ' ' | '\t' => {}
             '\n' => {
@@ -181,7 +238,14 @@ impl Scanner {
             }
 
             _ => {
-                self.errors.add_error("Unexpected token".to_string(), ErrorKind::LEXER);
+                if is_just_a_normal_number_no_bullshit(c) {
+                    // TODO - scan number literal
+                } else if c.is_alphabetic() {
+                    self.scan_identifier(c);
+                } else {
+                    self.errors.add_error("Unexpected token".to_string(), ErrorKind::LEXER);
+                }
+
             }
 
         }
@@ -212,71 +276,33 @@ mod tests {
     // TODO - also test that the lexemes are correct
     #[test]
     fn test_basic_tokens() {
-        let mut scanner = Scanner::new("()[]-+.,;*/".to_string());
-        scanner.scan();
-
-        let expected_tokens: Vec<TokenKind> = vec![
+        lexer_test("()[]-+.,;*/".to_string(), vec![
             TokenKind::LPAREN, TokenKind::RPAREN, TokenKind::LBRACKET, TokenKind::RBRACKET,
             TokenKind::MINUS, TokenKind::PLUS, TokenKind::DOT, TokenKind::COMMA, TokenKind::SEMICOLON,
             TokenKind::MULTIPLY, TokenKind::DIVIDE
-        ];
-        let expected_lexemes: Vec<&str> = vec![
+        ], vec![
             "(", ")", "[", "]", "-", "+", ".", ",", ";", "*", "/"
-        ];
-
-        assert_eq!(scanner.tokens.len(), expected_tokens.len());
-        for (i, token) in scanner.tokens.iter().enumerate() {
-            assert_eq!(token.kind, expected_tokens[i]);
-            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
-        }
+        ], vec![]);
     }
 
     #[test]
     fn test_multi_char_tokens() {
-        let mut scanner = Scanner::new("// = != == >= <= && || !".to_string());
-        scanner.scan();
-        let expected_tokens: Vec<TokenKind> = vec![
-            TokenKind::INTEGERDIVIDE, TokenKind::ASSIGN, TokenKind::NOTEQUAL, TokenKind::EQUAL, TokenKind::GREATEREQUAL,
-            TokenKind::LESSEQUAL, TokenKind::AND, TokenKind::OR, TokenKind::NOT
-        ];
-
-        let expected_lexemes: Vec<&str> = vec![
-            "//", "=", "!=", "==", ">=", "<=", "&&", "||", "!"
-        ];
-
-        println!("{:?}", scanner.tokens);
-
-        assert_eq!(scanner.tokens.len(), expected_tokens.len());
-        for (i, token) in scanner.tokens.iter().enumerate() {
-            assert_eq!(token.kind, expected_tokens[i]);
-            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
-        }
+        lexer_test("== != >= <= && ||".to_string(), vec![
+            TokenKind::EQUAL, TokenKind::NOTEQUAL, TokenKind::GREATEREQUAL, TokenKind::LESSEQUAL, TokenKind::AND, TokenKind::OR
+        ], vec![
+            "==", "!=", ">=", "<=", "&&", "||"
+        ], vec![]);
     }
-    // TODO - test utility function because this is some garbage code
 
     #[test]
     fn test_comments() {
-        let mut scanner = Scanner::new("() []; # this comment keeps going and should be ignored\n ==;".to_string());
-        scanner.scan();
-        let expected_tokens: Vec<TokenKind> = vec![
+        lexer_test("() []; # this comment keeps going and should be ignored\n ==;".to_string(), vec![
             TokenKind::LPAREN, TokenKind::RPAREN, TokenKind::LBRACKET, TokenKind::RBRACKET, TokenKind::SEMICOLON, TokenKind::EQUAL, TokenKind::SEMICOLON,
-        ];
-        let expected_lexemes: Vec<&str> = vec![
+        ], vec![
             "(", ")", "[", "]", ";", "==", ";"
-        ];
-
-        println!("{:?}", scanner.errors);
-        assert_eq!(scanner.errors.has_errors(), false);
-
-        println!("{:?}", scanner.tokens);
-        assert_eq!(scanner.tokens.len(), expected_tokens.len());
-        for (i, token) in scanner.tokens.iter().enumerate() {
-            println!("{:?}", token);
-            assert_eq!(token.kind, expected_tokens[i]);
-            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
-        }
+        ], vec![]);
     }
-    //
+    
     // #[test]
     // fn test_string_literals() {
     //     // "let myString = \"Hello, world!\";"
@@ -287,14 +313,20 @@ mod tests {
     //     // "let myNumber = 1234;\nlet myFloat = 12.34;"
     // }
     //
-    // #[test]
-    // fn test_identifiers() {
-    //     // "let myVar = 1234;\nlet myFloat = 12.34;"
-    // }
+    #[test]
+    fn test_identifiers() {
+        // "let myVar = 1234;\nlet myFloat = 12.34;"
+        lexer_test("let myVar = 1234; let myFloat = 12.34;".to_string(), vec![
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::NUMBER, TokenKind::SEMICOLON,
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::NUMBER, TokenKind::SEMICOLON,
+        ], vec![
+            "let", "myVar", "=", "1234", ";",
+            "let", "myFloat", "=", "12.34", ";"
+        ], vec![]);
+    }
     //
     // #[test]
     // fn test_keywords() {
     //     // "return let if else for while struct use identifier"
     // }
-
 }
