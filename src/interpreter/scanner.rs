@@ -6,7 +6,7 @@ enum TokenKind {
     MINUS, PLUS, MULTIPLY, DIVIDE, INTEGERDIVIDE, MODULO, RAISETO,
     EQUAL, NOTEQUAL, GREATER, GREATEREQUAL, LESS, LESSEQUAL,
     AND, OR, NOT, ASSIGN,
-    IDENTIFIER, STING, NUMBER,
+    IDENTIFIER, STRING, NUMBER,
     IF, ELIF, ELSE, LET, FOR, USE, STRUCT, WHILE, RETURN, // MATCH, CASE
     EOF, UNKNOWN,
 }
@@ -186,7 +186,29 @@ impl Scanner {
 
         self.add_token(TokenKind::NUMBER, lexeme);
     }
+    
+    fn scan_string(self: &mut Scanner, c: char) {
+        // c could be ' or "
+        let start = c;
+        let mut lexeme = String::new();
 
+        while self.current < self.source.len() as u32 {
+            let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
+
+            if c == start {
+                self.advance();
+                break;
+            } else if c == '\n' {
+                self.errors.add_error("Unterminated string".to_string(), ErrorKind::LEXER);
+                break;
+            } else {
+                lexeme.push(c);
+                self.advance();
+            }
+        }
+
+        self.add_token(TokenKind::STRING, lexeme);
+    }
 
     fn scan_token(self: &mut Scanner) {
         let c = self.advance();
@@ -225,7 +247,7 @@ impl Scanner {
             '|' => self.double_char_or_error(c, '|', TokenKind::OR),
 
             '"' | '\'' => {
-                // TODO - scan string literal
+                self.scan_string(c);
             }
 
             // always skip whitespace
@@ -256,11 +278,8 @@ impl Scanner {
                 } else {
                     self.errors.add_error("Unexpected token".to_string(), ErrorKind::LEXER);
                 }
-
             }
-
         }
-
     }
 }
 
@@ -314,16 +333,16 @@ mod tests {
         ], vec![]);
     }
     
-    // #[test]
-    // fn test_string_literals() {
-    //     // "let myString = \"Hello, world!\";"
-    // }
-    //
-    // #[test]
-    // fn test_number_literals() {
-    //     // "let myNumber = 1234;\nlet myFloat = 12.34;"
-    // }
-    //
+    #[test]
+    fn test_string_literals() {
+        lexer_test("let myString = \"Hello, world!\";".to_string(), vec![
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::STRING, TokenKind::SEMICOLON
+        ], vec![
+            "let", "myString", "=", "Hello, world!", ";"
+        ], vec![]);
+    }
+
+
     #[test]
     fn test_identifiers() {
         // "let myVar = 1234;\nlet myFloat = 12.34;"
@@ -335,9 +354,13 @@ mod tests {
             "let", "myFloat", "=", "12.34", ";"
         ], vec![]);
     }
-    //
-    // #[test]
-    // fn test_keywords() {
-    //     // "return let if else for while struct use identifier"
-    // }
+
+    #[test]
+    fn test_keywords() {
+        lexer_test("return let if else for while struct use identifier".to_string(), vec![
+            TokenKind::RETURN, TokenKind::LET, TokenKind::IF, TokenKind::ELSE, TokenKind::FOR, TokenKind::WHILE, TokenKind::STRUCT, TokenKind::USE, TokenKind::IDENTIFIER
+        ], vec![
+            "return", "let", "if", "else", "for", "while", "struct", "use", "identifier"
+        ], vec![]);
+    }
 }
