@@ -194,6 +194,21 @@ impl Scanner {
 mod tests {
     use super::*;
 
+    fn lexer_test(source: String, expected_tokens: Vec<TokenKind>, expected_lexemes: Vec<&str>, expected_errors: Vec<&str>) {
+        let mut scanner = Scanner::new(source);
+        scanner.scan();
+
+        println!("{:?}", scanner.tokens);
+
+        assert!(scanner.errors.expect_errors(expected_errors));
+
+        assert_eq!(scanner.tokens.len(), expected_tokens.len());
+        for (i, token) in scanner.tokens.iter().enumerate() {
+            assert_eq!(token.kind, expected_tokens[i]);
+            assert_eq!(token.lexeme, expected_lexemes[i].to_string());
+        }
+    }
+
     // TODO - also test that the lexemes are correct
     #[test]
     fn test_basic_tokens() {

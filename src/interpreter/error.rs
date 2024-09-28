@@ -1,9 +1,9 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ErrorKind { LEXER, PARSER, RUNTIME
 }
 
-#[derive(Debug)]
-struct InterpreterError {
+#[derive(Debug, PartialEq, Eq)]
+pub struct InterpreterError {
     kind: ErrorKind,
     message: String,
 
@@ -21,7 +21,7 @@ impl InterpreterError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct InterpreterErrors {
     errors: Vec<InterpreterError>
 }
@@ -39,5 +39,20 @@ impl InterpreterErrors {
 
     pub fn has_errors(self: &InterpreterErrors) -> bool {
         return self.errors.len() > 0
+    }
+
+    // testing utility funciton when we expect
+    pub fn expect_errors(self: &InterpreterErrors, expected: Vec<&str>) -> bool {
+        if self.errors.len() != expected.len() {
+            return false
+        }
+
+        for i in 0..self.errors.len() {
+            if self.errors[i].message != expected[i] {
+                return false
+            }
+        }
+
+        return true
     }
 }
