@@ -9,6 +9,8 @@ enum TokenKind {
     IDENTIFIER, STRING, NUMBER,
     IF, ELIF, ELSE, LET, FOR, USE, STRUCT, WHILE, RETURN, // MATCH, CASE
     EOF, UNKNOWN,
+
+    NEWLINE
 }
 
 
@@ -230,6 +232,11 @@ impl Scanner {
                 while self.current < self.source.len() as u32 && self.source.chars().nth(self.current as usize).unwrap_or('\0') != '\n' {
                     self.advance();
                 }
+
+                // skip the newline because we never want it
+                if self.current < self.source.len() as u32 {
+                    self.advance();
+                }
             }
 
             // single chars
@@ -279,6 +286,7 @@ impl Scanner {
                 // - after we scan, we can insert semicolons where needed and remove all NEWLINE
                 // tokens
 
+                self.add_token(TokenKind::NEWLINE, "\n".to_string());
             }
 
             _ => {
