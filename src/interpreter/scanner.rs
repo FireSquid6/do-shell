@@ -191,19 +191,30 @@ impl Scanner {
         // c could be ' or "
         let start = c;
         let mut lexeme = String::new();
+        let mut escape = false;
 
         while self.current < self.source.len() as u32 {
             let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
 
             if c == start {
                 self.advance();
-                break;
+                if escape {
+                    lexeme.push(c);
+                } else {
+                    break;
+                }
             } else if c == '\n' {
                 self.errors.add_error("Unterminated string".to_string(), ErrorKind::LEXER);
                 break;
             } else {
                 lexeme.push(c);
                 self.advance();
+            }
+
+            if c == '\\' {
+                escape = true;
+            } else {
+                escape = false;
             }
         }
 
@@ -340,12 +351,34 @@ mod tests {
         ], vec![
             "let", "myString", "=", "Hello, world!", ";"
         ], vec![]);
+
+        lexer_test("let myString = 'Hello, world!';".to_string(), vec![
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::STRING, TokenKind::SEMICOLON
+        ], vec![
+            "let", "myString", "=", "Hello, world!", ";"
+        ], vec![]);
+    }
+
+    #[test]
+    fn test_string_literal_with_escape() {
+        lexer_test("let myString = \"Hello, \\n world!\";".to_string(), vec![
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::STRING, TokenKind::SEMICOLON
+        ], vec![
+            "let", "myString", "=", "Hello, \\n world!", ";"
+        ], vec![]);
+
+        let raw_string = r#"let myString = "Hello, \" world!";"#;
+
+        lexer_test(raw_string.to_string(), vec![
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::STRING, TokenKind::SEMICOLON
+        ], vec![
+            "let", "myString", "=", "Hello, \\\" world!", ";"
+        ], vec![]);
     }
 
 
     #[test]
     fn test_identifiers() {
-        // "let myVar = 1234;\nlet myFloat = 12.34;"
         lexer_test("let myVar = 1234; let myFloat = 12.34;".to_string(), vec![
             TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::NUMBER, TokenKind::SEMICOLON,
             TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::NUMBER, TokenKind::SEMICOLON,
