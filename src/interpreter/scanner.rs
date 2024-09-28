@@ -162,10 +162,21 @@ impl Scanner {
 
     fn scan_number(self: &mut Scanner, c: char) {
         let mut lexeme = c.to_string();
+        let mut seen_dot = false;
 
         while self.current < self.source.len() as u32 {
             let c = self.source.chars().nth(self.current as usize).unwrap_or('\0');
-            if is_just_a_normal_number_no_bullshit(c) {
+            if c == '.' {
+                if seen_dot {
+                    self.errors.add_error("Invalid number contains more than one decimal".to_string(), ErrorKind::LEXER);
+                    break;
+                } else {
+                    seen_dot = true;
+                    lexeme.push(c);
+                    self.advance();
+                }
+            }
+            else if is_just_a_normal_number_no_bullshit(c) {
                 lexeme.push(c);
                 self.advance();
             } else {
@@ -239,7 +250,7 @@ impl Scanner {
 
             _ => {
                 if is_just_a_normal_number_no_bullshit(c) {
-                    // TODO - scan number literal
+                    self.scan_number(c);
                 } else if c.is_alphabetic() {
                     self.scan_identifier(c);
                 } else {
