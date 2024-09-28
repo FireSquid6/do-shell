@@ -75,6 +75,51 @@ impl Scanner {
         }
     }
 
+    pub fn comb(self: &mut Scanner) {
+        // We definitely DO NOT want to insert a semicolon if:
+        // - the previous token is a comma or a semicolon
+        // - the next valid character is a dot (probably chaining methods or properties)
+        // - the next valid character is a comma (probably a list)
+        // - the next valid character is a || or && (probably a logical operator)
+        // - otherwise, we insert
+        let mut i = 0;
+
+
+        // ensure that the first token is not a NEWLINE
+        if self.tokens.len() > 0 && self.tokens[0].kind == TokenKind::NEWLINE {
+            self.tokens.remove(0);
+        }
+
+        while i < self.tokens.len() - 1 {
+            if self.tokens[i].kind == TokenKind::NEWLINE {
+                let prev = &self.tokens[i - 1];
+                let next = &self.tokens[i + 1];
+
+                // if the previous token is a comma or semicolon, then we just remove the newline 
+                if prev.kind == TokenKind::COMMA || prev.kind == TokenKind::SEMICOLON {
+                    self.tokens.remove(i);
+                    continue;
+                }
+
+                // if the next token is a dot, comma, or logical operator, then we just remove the newline
+                if next.kind == TokenKind::DOT || next.kind == TokenKind::COMMA || next.kind == TokenKind::AND || next.kind == TokenKind::OR {
+                    self.tokens.remove(i);
+                    continue;
+                }
+                
+
+                self.tokens[i].kind = TokenKind::SEMICOLON;
+            }
+
+            i += 1;
+        }
+
+        // ensure that the last token is not a NEWLINE
+        while self.tokens.len() > 0 && self.tokens[self.tokens.len() - 1].kind == TokenKind::NEWLINE {
+            self.tokens.pop();
+        }
+    }
+
     fn new(source: String) -> Scanner {
         Scanner {
             source,
@@ -271,15 +316,7 @@ impl Scanner {
             // always skip whitespace
             ' ' | '\t' => {}
             '\n' => {
-                // TODO - when we see \n, look back. If it's something that implies the start of
-                // a new line, then we need to insert a semicolon. A line probably ends if:
-                // - the previous token is string literal, identifier, ), or ]
-                //
-                // We definitely DO NOT want to insert a semicolon if:
-                // - the previous token is a comma
-                // - the next valid character is a dot (probably chaining methods or properties)
-                // - the next valid character is a comma (probably a list)
-                // - the next valid character is a || or && (probably a logical operator)
+
                 //
                 // Other valid way:
                 // - convert all \ns in a row to a single NEWLINE token
@@ -310,6 +347,7 @@ mod tests {
     fn lexer_test(source: String, expected_tokens: Vec<TokenKind>, expected_lexemes: Vec<&str>, expected_errors: Vec<&str>) {
         let mut scanner = Scanner::new(source);
         scanner.scan();
+        scanner.comb();
 
         println!("{:?}", scanner.tokens);
 
