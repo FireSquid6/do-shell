@@ -277,11 +277,6 @@ impl Scanner {
                 while self.current < self.source.len() as u32 && self.source.chars().nth(self.current as usize).unwrap_or('\0') != '\n' {
                     self.advance();
                 }
-
-                // skip the newline because we never want it
-                if self.current < self.source.len() as u32 {
-                    self.advance();
-                }
             }
 
             // single chars
@@ -441,5 +436,17 @@ mod tests {
         ], vec![
             "return", "let", "if", "else", "for", "while", "struct", "use", "identifier"
         ], vec![]);
+    }
+
+    #[test]
+    fn test_combing() {
+        lexer_test("let a = 5\n let b = 6\n".to_string(), vec![
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::NUMBER, TokenKind::SEMICOLON,
+            TokenKind::LET, TokenKind::IDENTIFIER, TokenKind::ASSIGN, TokenKind::NUMBER, TokenKind::SEMICOLON,
+        ], vec![
+            "let", "a", "=", "5", "\n",
+            "let", "b", "=", "6", "\n",
+        ], vec![]);
+
     }
 }
