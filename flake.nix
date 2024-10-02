@@ -11,6 +11,9 @@
         rustc
         cargo
         rust-analyzer
+
+        bun
+        typescript-language-server
       ];
     };
   };
