@@ -1,7 +1,7 @@
 use super::error::{InterpreterErrors, ErrorKind};
 
 #[derive(Debug, Eq, PartialEq)]
-enum TokenKind {
+pub enum TokenKind {
     LPAREN, RPAREN, LBRACE, LBRACKET, RBRACKET, RBRACE, COMMA, DOT, SEMICOLON, COLON,
     MINUS, PLUS, MULTIPLY, DIVIDE, INTEGERDIVIDE, MODULO, RAISETO,
     EQUAL, NOTEQUAL, GREATER, GREATEREQUAL, LESS, LESSEQUAL,
