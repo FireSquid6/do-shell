@@ -9,12 +9,30 @@ pub struct LetStatement {
     expression: dyn Expression,
 }
 
+impl Statement for LetStatement {
+    fn execute(&self) {
+        println!("LetStatement");
+    }
+}
+
 pub struct ReturnStatement {
     expression: dyn Expression,
 }
 
+impl Statement for ReturnStatement {
+    fn execute(&self) {
+        println!("ReturnStatement");
+    }
+}
+
 pub struct ExpressionStatement {
     expression: dyn Expression,
+}
+
+impl Statement for ExpressionStatement {
+    fn execute(&self) {
+        println!("ExpressionStatement");
+    }
 }
 
 
