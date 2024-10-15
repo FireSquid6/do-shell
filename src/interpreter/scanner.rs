@@ -1,6 +1,6 @@
 use super::error::{InterpreterErrors, ErrorKind};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum TokenKind {
     LPAREN, RPAREN, LBRACE, LBRACKET, RBRACKET, RBRACE, COMMA, DOT, SEMICOLON, COLON,
     MINUS, PLUS, MULTIPLY, DIVIDE, INTEGERDIVIDE, MODULO, RAISETO,
@@ -14,7 +14,7 @@ pub enum TokenKind {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     kind: TokenKind,
     lexeme: String,
@@ -23,11 +23,11 @@ pub struct Token {
 }
 
 impl Token {
-    fn to_string(self: Token) {
+    pub fn to_string(self: Token) {
         println!("Token: {:?} {} {} {}", self.kind, self.lexeme, self.line, self.column);
     }
 
-    fn new(kind: TokenKind, lexeme: String, line: u32, column: u32) -> Token {
+    pub fn new(kind: TokenKind, lexeme: String, line: u32, column: u32) -> Token {
         Token {
             kind,
             lexeme,

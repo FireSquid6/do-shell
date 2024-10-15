@@ -6,8 +6,6 @@ pub enum ErrorKind { LEXER, PARSER, RUNTIME
 pub struct InterpreterError {
     kind: ErrorKind,
     message: String,
-
-
 }
 
 
