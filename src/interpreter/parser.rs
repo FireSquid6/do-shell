@@ -15,6 +15,25 @@ impl Parser {
         let errors: InterpreterErrors = InterpreterErrors::new();
 
 
+        let mut token = self.advance();
+
+        while token.kind != TokenKind::EOF {
+            match token.kind {
+                TokenKind::LET => {
+                    // let statement = self.parse_let_statement();
+                    // program.push(Box::new(statement));
+                },
+                TokenKind::RETURN => {
+                    // let statement = self.parse_return_statement();
+                    // program.push(Box::new(statement));
+                },
+                _ => {
+                    // let statement = self.parse_expression_statement();
+                    // program.push(Box::new(statement));
+                }
+            }
+        }
+
         return (program, errors);
     }
 
@@ -28,6 +47,10 @@ impl Parser {
         }
 
         return token.unwrap().clone();
+    }
+
+    fn parse_let_statement() -> Box<LetStatement> {
+
     }
 
 }

@@ -16,10 +16,10 @@ pub enum TokenKind {
 
 #[derive(Debug, Clone)]
 pub struct Token {
-    kind: TokenKind,
-    lexeme: String,
-    line: u32,
-    column: u32,
+    pub kind: TokenKind,
+    pub lexeme: String,
+    pub line: u32,
+    pub column: u32,
 }
 
 impl Token {

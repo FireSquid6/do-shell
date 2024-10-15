@@ -60,6 +60,20 @@ pub struct InfixExpression {
     right: dyn Expression,
 }
 
+pub struct VoidExpression {}
+
+impl Expression for VoidExpression {
+    fn evaluate(&self) {
+        panic!();
+    }
+}
+
+impl VoidExpression {
+    fn new() -> VoidExpression {
+        return VoidExpression {}
+    }
+}
+
 pub trait Value {
     fn to_string(&self) -> String;
     fn add(&self, other: &dyn Value) -> dyn Value;
