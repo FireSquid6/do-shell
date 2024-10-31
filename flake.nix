@@ -14,6 +14,9 @@
 
         bun
         typescript-language-server
+
+        go
+        gopls
       ];
     };
   };
